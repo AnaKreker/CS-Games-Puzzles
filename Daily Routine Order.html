@@ -1,0 +1,489 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Daily Routine Order</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap">
+<style>
+/* Layout: numbered "First / Next / Last" slots across the top, shuffled picture cards in a tray below.
+   Deliberately single-theme (classroom cream) to match Robot to the Snack on every device. */
+:root{
+  --cream:#FFFDF7; --navy:#2B2D42; --turq:#2EC4B6; --blue:#4D96FF; --orange:#FF9F1C; --purple:#8E44AD;
+  --yellow:#FFD23F; --red:#E63946; --green:#3DB86A; --pink:#F7A8B8; --line:#A9CBEF;
+  --soft:#EEF2F7; --tint:#EAF7F5; --muted:#5A5D73;
+  --display:"Fredoka", "Arial Rounded MT Bold", Arial, sans-serif;
+  --body:Arial, Helvetica, sans-serif;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{background:var(--cream)}
+body{color:var(--navy);font-family:var(--body);font-size:18px;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));
+  padding-block:14px 32px;-webkit-tap-highlight-color:transparent}
+.wrap{max-width:980px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+
+header{display:flex;flex-wrap:wrap;align-items:center;gap:12px 16px;justify-content:space-between}
+h1{font-family:var(--display);font-weight:700;font-size:clamp(36px,6.5vw,60px);margin:0;line-height:1.05;text-wrap:balance;color:var(--navy)}
+h1 .titlebox{display:inline-block}
+.levels{display:flex;flex-wrap:wrap;gap:8px}
+.lv{font-family:var(--display);font-weight:600;font-size:18px;width:44px;height:44px;border-radius:14px;
+  border:3px solid #fff;background:var(--soft);color:var(--navy);cursor:pointer;position:relative;
+  box-shadow:inset 0 0 0 2px rgba(255,255,255,.5),0 3px 0 rgba(43,45,66,.10)}
+.lv[aria-current="true"]{background:var(--turq);color:#fff}
+.lv .st{position:absolute;right:-6px;top:-8px;width:20px;height:20px}
+.tools{display:flex;gap:8px}
+.icon{width:52px;height:52px;border-radius:16px;border:3px solid #fff;background:var(--soft);cursor:pointer;
+  display:grid;place-items:center;box-shadow:inset 0 0 0 2px rgba(255,255,255,.5),0 3px 0 rgba(43,45,66,.10)}
+.icon svg{width:28px;height:28px}
+.icon[aria-pressed="false"]{opacity:.55}
+
+.say{font-family:var(--display);font-weight:600;font-size:clamp(20px,2.6vw,26px);margin:0;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.say .bubble{background:var(--purple);color:#fff;border:none;border-radius:18px;padding:11px 19px;line-height:1.2}
+
+/* slots */
+.stage{position:relative;background:#D9F3EF;border:5px solid #fff;border-radius:26px;padding:14px;
+  box-shadow:inset 0 0 0 3px rgba(255,255,255,.6),0 6px 0 rgba(43,45,66,.08)}
+.slots{display:grid;gap:12px}
+.slot{position:relative;background:rgba(255,255,255,.65);border:3px dashed var(--line);border-radius:22px;
+  padding:60px 8px 8px;display:flex;justify-content:center;min-height:230px;cursor:pointer}
+.slot.over{background:#fff;border-color:var(--turq)}
+.slot.ok{border:3px solid var(--green);background:#fff}
+.slot.shake{animation:shake .45s ease}
+@keyframes shake{20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(3px)}}
+.slot.glow{box-shadow:0 0 0 6px var(--yellow)}
+.badge{position:absolute;left:10px;top:10px;display:flex;align-items:center;gap:6px;font-family:var(--display);font-weight:600;font-size:17px}
+.badge b{width:38px;height:38px;border-radius:12px;border:3px solid #fff;color:#fff;display:grid;place-items:center;font-size:22px}
+.check{position:absolute;right:8px;top:6px;width:28px;height:28px}
+.empty{align-self:center;width:52px;height:52px;border-radius:50%;border:3px dashed #C9D3E0}
+
+/* cards */
+.tray{display:flex;flex-wrap:wrap;justify-content:center;gap:14px;min-height:190px;align-items:flex-start;
+  background:#fff;border:3px solid var(--line);border-radius:24px;padding:14px}
+.card{width:clamp(96px,20vw,156px);border-radius:20px;border:4px solid #fff;background:#fff;cursor:grab;padding:6px 6px 8px;
+  display:flex;flex-direction:column;align-items:center;gap:6px;touch-action:none;user-select:none;-webkit-user-select:none;
+  box-shadow:inset 0 0 0 2px rgba(255,255,255,.5),0 4px 0 rgba(43,45,66,.12),0 0 0 2px #E3EAF2;color:var(--navy);font:inherit}
+.slot .card{width:100%;max-width:156px}
+.card.pop{animation:pop .28s ease}
+@keyframes pop{0%{transform:scale(.8)}70%{transform:scale(1.06)}100%{transform:scale(1)}}
+.card.lift{opacity:.3}
+.card.locked{cursor:default}
+.pic{width:100%;aspect-ratio:1;border-radius:14px;background:var(--tint);display:grid;place-items:center}
+.pic svg{width:84%;height:84%;overflow:visible}
+.word{font-family:var(--display);font-weight:600;font-size:clamp(15px,1.9vw,19px);line-height:1.1;text-align:center;min-height:1.2em}
+.nowords .word{display:none}
+.ghost{position:fixed;z-index:50;pointer-events:none;margin:0;transform-origin:center;opacity:.95;
+  box-shadow:0 12px 24px rgba(43,45,66,.18)}
+button:focus-visible{outline:4px solid var(--navy);outline-offset:3px}
+
+.actions{display:flex;justify-content:center;gap:12px;flex-wrap:wrap}
+.btn{font-family:var(--display);font-weight:600;font-size:22px;border-radius:20px;border:4px solid #fff;cursor:pointer;
+  min-height:66px;padding:0 26px;display:flex;align-items:center;justify-content:center;gap:8px;color:var(--navy);background:var(--soft);
+  box-shadow:inset 0 0 0 2px rgba(255,255,255,.5),0 4px 0 rgba(43,45,66,.12)}
+.btn svg{width:28px;height:28px}
+.btn.go{background:var(--green);color:#fff;font-size:26px;min-width:200px}
+.btn.next{background:var(--turq);color:#fff}
+.btn:disabled{opacity:.45;cursor:default}
+
+.win{position:fixed;inset:0;display:grid;place-items:center;background:rgba(255,253,247,.8);z-index:40;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));padding-block:16px}
+.win .cardw{background:#fff;border:8px solid var(--yellow);border-radius:44px;padding:clamp(24px,5vw,40px) clamp(24px,7vw,56px);text-align:center;max-width:100%;
+  display:flex;flex-direction:column;align-items:center;gap:22px;box-shadow:0 14px 0 rgba(43,45,66,.08)}
+.win h2{font-family:var(--display);font-size:clamp(44px,9vw,80px);line-height:1.05;margin:0}
+.win .stars{display:flex;gap:12px}
+.win .stars svg{width:clamp(64px,16vw,92px);height:clamp(64px,16vw,92px)}
+.win .btn.next{font-size:clamp(26px,5vw,36px);min-height:clamp(76px,14vw,100px);padding:0 40px;border-radius:28px}
+.confetti{position:absolute;inset:0;overflow:hidden;pointer-events:none;border-radius:20px;z-index:6}
+.confetti i{position:absolute;top:-20px;width:14px;height:14px;border-radius:4px;border:2px solid #fff;animation:fall 1.6s ease-in forwards}
+@keyframes fall{to{transform:translateY(500px) rotate(360deg);opacity:.2}}
+
+.drawer{position:fixed;inset:0;background:rgba(43,45,66,.35);display:grid;place-items:center;z-index:60;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px))}
+.sheet{background:var(--cream);border:5px solid #fff;border-radius:26px;padding:20px 22px;width:min(480px,100%);
+  max-height:90vh;overflow:auto;display:flex;flex-direction:column;gap:14px;box-shadow:0 10px 0 rgba(43,45,66,.12)}
+.sheet h2{font-family:var(--display);margin:0;font-size:26px}
+.sheet p{margin:0;font-size:15px;color:var(--muted);line-height:1.4}
+.row{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:17px}
+.toggle{width:64px;height:38px;border-radius:20px;border:3px solid #fff;background:#C9D3E0;position:relative;cursor:pointer;flex:none}
+.toggle::after{content:"";position:absolute;top:3px;left:3px;width:26px;height:26px;border-radius:50%;background:#fff;transition:left .15s}
+.toggle[aria-pressed="true"]{background:var(--turq)}
+.toggle[aria-pressed="true"]::after{left:29px}
+.sheet .close{align-self:flex-end;min-height:56px}
+
+@media (max-width:560px){
+  .slot{min-height:180px;padding-top:56px}
+  .badge span{display:none}
+  .slots.n4{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  .btn.go{min-width:0;flex:1}
+}
+@media (max-width:760px){
+  .slots.n5{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+}
+@media (prefers-reduced-motion:reduce){
+  .card.pop,.slot.shake,.confetti i{animation:none}
+}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1><span class="titlebox" id="topic">Morning</span></h1>
+    <div class="levels" id="levels" aria-label="Levels"></div>
+    <div class="tools">
+      <button class="icon" id="sound" aria-pressed="true" aria-label="Sounds on or off" title="Sounds on/off">
+        <svg viewBox="0 0 24 24"><path d="M9 17V5l11-2v12" stroke="#2B2D42" stroke-width="2.2" fill="none" stroke-linejoin="round"/><circle cx="6.5" cy="17.5" r="3" fill="#2B2D42"/><circle cx="17.5" cy="15.5" r="3" fill="#2B2D42"/></svg>
+      </button>
+      <button class="icon" id="teacher" aria-label="Teacher settings" title="Teacher settings">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2" fill="none" stroke="#2B2D42" stroke-width="2.2"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1" stroke="#2B2D42" stroke-width="2.2" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <p class="say" aria-live="polite"><span class="bubble" id="msg">Put the pictures in order.</span></p>
+
+  <div class="stage" id="stage">
+    <div class="slots" id="slots"></div>
+  </div>
+
+  <div class="tray" id="tray" aria-label="Picture cards"></div>
+
+  <div class="actions" id="actions">
+    <button class="btn" id="reset">
+      <svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 2.5-5.8M4 4v5h5" stroke="#2B2D42" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>Start over
+    </button>
+    <button class="btn go" id="checkBtn">
+      <svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" stroke="#fff" stroke-width="3.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>Check
+    </button>
+  </div>
+</div>
+
+<div class="drawer" id="drawer" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="tTitle">
+    <h2 id="tTitle">Teacher settings</h2>
+    <div class="row"><span>Helper mode</span><button class="toggle" id="tHelp" aria-pressed="false" aria-label="Helper mode"></button></div>
+    <p>With helper mode on, only the right card sticks in each spot. A wrong card gently goes back, so students never see a wrong answer on the board. With it off, students fill every spot and press <b>Check</b>.</p>
+    <div class="row"><span>Show words under pictures</span><button class="toggle" id="tWords" aria-pressed="true" aria-label="Show words under pictures"></button></div>
+    <div class="row"><span>Sounds</span><button class="toggle" id="tSound" aria-pressed="true" aria-label="Sounds"></button></div>
+    <div class="row"><span>Stars earned</span><button class="btn" id="resetStars" style="min-height:48px;font-size:17px;padding:0 16px">Reset stars</button></div>
+    <p>Students can tap a card to send it to the next empty spot, or drag it to any spot. Tap a card in a spot to send it back.</p>
+    <button class="btn next close" id="closeT">Done</button>
+  </div>
+</div>
+
+<script>
+(function(){
+/* ---------- pictures ---------- */
+const face=(x,y,s=1,c="#2B2D42")=>`<g transform="translate(${x} ${y}) scale(${s})"><circle cx="-8" cy="0" r="3.2" fill="${c}"/><circle cx="8" cy="0" r="3.2" fill="${c}"/><circle cx="-14" cy="7" r="3.4" fill="#F7A8B8"/><circle cx="14" cy="7" r="3.4" fill="#F7A8B8"/><path d="M-4 6q4 4 8 0" stroke="${c}" stroke-width="2.6" fill="none" stroke-linecap="round"/></g>`;
+const bowl=(x,y,s=1,dots=true)=>`<g transform="translate(${x} ${y}) scale(${s})">${dots?`<circle cx="-22" cy="-3" r="7" fill="#FF9F1C" stroke="#fff" stroke-width="2.5"/><circle cx="-6" cy="-6" r="7" fill="#FFD23F" stroke="#fff" stroke-width="2.5"/><circle cx="10" cy="-4" r="7" fill="#E63946" stroke="#fff" stroke-width="2.5"/><circle cx="24" cy="-2" r="6" fill="#FF9F1C" stroke="#fff" stroke-width="2.5"/>`:""}<path d="M-40 0H40A40 34 0 0 1-40 0z" fill="#4D96FF" stroke="#fff" stroke-width="5" stroke-linejoin="round"/></g>`;
+const drop=(x,y,s=1)=>`<path transform="translate(${x} ${y}) scale(${s})" d="M0 -10c5 7 7 10 7 13a7 7 0 0 1-14 0c0-3 2-6 7-13z" fill="#2EC4B6" stroke="#fff" stroke-width="2.5"/>`;
+const bubble=(x,y,r)=>`<circle cx="${x}" cy="${y}" r="${r}" fill="rgba(255,255,255,.85)" stroke="#A9CBEF" stroke-width="3"/>`;
+const PIC={
+  clock:`<path d="M10 16l-7-5M90 16l7-5M7 32H0M93 32h7" stroke="#FFD23F" stroke-width="4" stroke-linecap="round"/>
+    <circle cx="27" cy="22" r="11" fill="#FFD23F" stroke="#fff" stroke-width="4"/><circle cx="73" cy="22" r="11" fill="#FFD23F" stroke="#fff" stroke-width="4"/>
+    <circle cx="50" cy="55" r="35" fill="#FF9F1C" stroke="#fff" stroke-width="5"/><circle cx="50" cy="55" r="26" fill="#FFFDF7"/>
+    <path d="M50 55V37M50 55l12 7" stroke="#2B2D42" stroke-width="4.5" stroke-linecap="round"/><circle cx="50" cy="55" r="4" fill="#E63946"/>`,
+  eat:`<g transform="rotate(28 70 38)"><rect x="66" y="6" width="9" height="46" rx="4.5" fill="#8E44AD" stroke="#fff" stroke-width="3"/></g>${bowl(50,52,1)}${face(50,68,.9,"#FFFDF7")}`,
+  bus:`<rect x="6" y="22" width="88" height="54" rx="14" fill="#FFD23F" stroke="#fff" stroke-width="5"/>
+    <rect x="15" y="31" width="19" height="17" rx="5" fill="#A9CBEF"/><rect x="40" y="31" width="19" height="17" rx="5" fill="#A9CBEF"/><rect x="65" y="31" width="21" height="17" rx="5" fill="#A9CBEF"/>
+    <rect x="10" y="56" width="80" height="6" rx="3" fill="#FF9F1C"/><circle cx="85" cy="68" r="4" fill="#E63946"/>
+    <circle cx="27" cy="78" r="10" fill="#2B2D42" stroke="#fff" stroke-width="4"/><circle cx="73" cy="78" r="10" fill="#2B2D42" stroke="#fff" stroke-width="4"/>`,
+  wet:`<path d="M18 30h40a16 16 0 0 1 16 16v6" stroke="#fff" stroke-width="20" fill="none" stroke-linecap="round"/>
+    <path d="M18 30h40a16 16 0 0 1 16 16v6" stroke="#4D96FF" stroke-width="12" fill="none" stroke-linecap="round"/>
+    <rect x="28" y="12" width="22" height="9" rx="4.5" fill="#4D96FF" stroke="#fff" stroke-width="3"/><rect x="36" y="18" width="6" height="8" fill="#4D96FF"/>
+    ${drop(74,68,1.1)}${drop(64,84,.9)}${drop(84,86,.9)}`,
+  soap:`${bubble(26,30,9)}${bubble(50,20,12)}${bubble(76,30,8)}
+    <rect x="14" y="44" width="72" height="40" rx="16" fill="#8E44AD" stroke="#fff" stroke-width="5"/>${face(50,62,1,"#FFFDF7")}`,
+  towel:`<rect x="8" y="12" width="84" height="9" rx="4.5" fill="#4D96FF" stroke="#fff" stroke-width="3"/>
+    <path d="M24 18h52v64a7 7 0 0 1-7 7H31a7 7 0 0 1-7-7z" fill="#FF9F1C" stroke="#fff" stroke-width="5"/>
+    <rect x="27" y="62" width="46" height="6" fill="#FFFDF7"/><rect x="27" y="73" width="46" height="4" fill="#FFFDF7"/>${face(50,42,.85)}`,
+  sock:`<path d="M24 8H56V54H78A14 14 0 0 1 78 82H42A18 18 0 0 1 24 64Z" fill="#2EC4B6" stroke="#fff" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M80 56.5A11.5 11.5 0 0 1 80 79.5H74V56.5Z" fill="#FFFDF7"/>
+    <path d="M26.5 62V64A15.5 15.5 0 0 0 42 79.5H46V62Z" fill="#FFFDF7"/>
+    <rect x="26.5" y="14" width="27" height="8" fill="#FFFDF7"/><rect x="26.5" y="27" width="27" height="5" fill="#FFFDF7"/>${face(40,44,.75)}`,
+  shoe:`<path d="M10 64c0-16 6-28 15-28h15l9 11h13c15 0 28 8 28 22v3H10z" fill="#4D96FF" stroke="#fff" stroke-width="5" stroke-linejoin="round"/>
+    <rect x="6" y="70" width="88" height="13" rx="6.5" fill="#FFFDF7" stroke="#A9CBEF" stroke-width="3"/>
+    <path d="M30 46l12-3M32 54l13-3M35 62l13-3" stroke="#FFFDF7" stroke-width="3.5" stroke-linecap="round"/>`,
+  outside:`<g stroke="#FFD23F" stroke-width="4" stroke-linecap="round"><path d="M74 4v6M74 42v6M52 26h6M90 26h6M59 11l4 4M85 37l4 4M59 41l4-4M85 15l4-4"/></g>
+    <circle cx="74" cy="26" r="12" fill="#FFD23F" stroke="#fff" stroke-width="3"/>
+    <rect x="30" y="50" width="11" height="32" rx="4" fill="#C77D2E"/>
+    <circle cx="36" cy="40" r="22" fill="#3DB86A" stroke="#fff" stroke-width="5"/>${face(36,40,.8,"#FFFDF7")}
+    <rect x="4" y="78" width="92" height="14" rx="7" fill="#3DB86A" stroke="#fff" stroke-width="4"/>`,
+  paste:`<g transform="translate(4 12) rotate(32 70 30)">
+      <path d="M8 16h46l12 7v14l-12 7H8a7 7 0 0 1-7-7V23a7 7 0 0 1 7-7z" fill="#2EC4B6" stroke="#fff" stroke-width="5" stroke-linejoin="round"/>
+      <rect x="64" y="25" width="8" height="10" rx="2" fill="#2EC4B6" stroke="#fff" stroke-width="2.5"/>
+      <rect x="10" y="23" width="30" height="14" rx="5" fill="#FFFDF7"/><path d="M15 30h20" stroke="#4D96FF" stroke-width="3.5" stroke-linecap="round"/>
+    </g>
+    <path d="M75 47c2 2 2 4 0 6" stroke="#2EC4B6" stroke-width="6" fill="none" stroke-linecap="round"/>
+    <rect x="4" y="74" width="58" height="12" rx="6" fill="#4D96FF" stroke="#fff" stroke-width="4"/>
+    <rect x="54" y="70" width="40" height="14" rx="6" fill="#4D96FF" stroke="#fff" stroke-width="4"/>
+    <rect x="58" y="57" width="32" height="14" rx="4" fill="#FFFDF7" stroke="#A9CBEF" stroke-width="3"/>
+    <path d="M60 56c5-7 9 2 14-4s9 4 14-2" stroke="#fff" stroke-width="11" fill="none" stroke-linecap="round"/>
+    <path d="M60 56c5-7 9 2 14-4s9 4 14-2" stroke="#2EC4B6" stroke-width="6.5" fill="none" stroke-linecap="round"/>`,
+  brush:`<path d="M10 30c12 7 68 7 80 0-2 34-22 52-40 52S12 64 10 30z" fill="#E63946" stroke="#fff" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M18 35c10 4 54 4 64 0l-2 13c-12 3-48 3-60 0z" fill="#FFFDF7"/>
+    <path d="M30 37v12M42 38v12M54 38v12M66 37v12" stroke="#A9CBEF" stroke-width="2.5" stroke-linecap="round"/>
+    <ellipse cx="50" cy="68" rx="20" ry="8" fill="#F7A8B8"/>
+    <g transform="rotate(-14 62 44)">
+      <rect x="64" y="46" width="38" height="11" rx="5.5" fill="#4D96FF" stroke="#fff" stroke-width="3.5"/>
+      <rect x="40" y="44" width="28" height="14" rx="5" fill="#4D96FF" stroke="#fff" stroke-width="3.5"/>
+      <rect x="42" y="34" width="24" height="11" rx="3" fill="#FFFDF7" stroke="#A9CBEF" stroke-width="2.5"/>
+    </g>
+    ${bubble(24,20,7)}${bubble(40,12,5)}${bubble(80,16,8)}`,
+  cup:`<path d="M22 26h56l-7 58a7 7 0 0 1-7 6H36a7 7 0 0 1-7-6z" fill="#FF9F1C" stroke="#fff" stroke-width="5" stroke-linejoin="round"/>
+    <ellipse cx="50" cy="27" rx="27" ry="6" fill="#A9CBEF" stroke="#fff" stroke-width="3"/>${face(50,56)}${drop(80,14,.8)}`,
+  cereal:`<g transform="rotate(-35 40 32)"><rect x="22" y="6" width="36" height="48" rx="7" fill="#E63946" stroke="#fff" stroke-width="5"/><circle cx="40" cy="28" r="9" fill="#FFD23F" stroke="#fff" stroke-width="2.5"/><rect x="28" y="42" width="24" height="5" rx="2.5" fill="#FFFDF7"/></g>
+    <circle cx="64" cy="48" r="5" fill="#FF9F1C" stroke="#fff" stroke-width="2"/><circle cx="58" cy="58" r="5" fill="#FFD23F" stroke="#fff" stroke-width="2"/><circle cx="68" cy="62" r="5" fill="#FF9F1C" stroke="#fff" stroke-width="2"/>
+    ${bowl(60,74,.75,false)}`,
+  milk:`<g transform="rotate(-35 38 32)"><path d="M22 22l8-14h20l8 14v38H22z" fill="#FFFFFF" stroke="#A9CBEF" stroke-width="4" stroke-linejoin="round"/><rect x="22" y="34" width="36" height="14" fill="#4D96FF"/><path d="M32 41h16" stroke="#fff" stroke-width="3" stroke-linecap="round"/></g>
+    <path d="M62 44c2 8 2 14 0 26" stroke="#A9CBEF" stroke-width="9" fill="none" stroke-linecap="round"/><path d="M62 44c2 8 2 14 0 26" stroke="#fff" stroke-width="5" fill="none" stroke-linecap="round"/>
+    ${bowl(60,76,.75)}`,
+  sink:`<path d="M46 46V26h18" stroke="#fff" stroke-width="14" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M46 46V26h18" stroke="#8E44AD" stroke-width="8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    ${drop(64,40,.7)}
+    <path d="M6 50h88l-9 32a8 8 0 0 1-8 6H23a8 8 0 0 1-8-6z" fill="#A9CBEF" stroke="#fff" stroke-width="5" stroke-linejoin="round"/>
+    ${bowl(50,62,.45,false)}${bubble(28,60,5)}${bubble(74,58,6)}${bubble(70,72,4)}`
+};
+const SKIN="#FFC3A0";
+const hand=(x,y,r,t)=>`<g transform="translate(${x} ${y}) rotate(${r})"><ellipse cx="${t}" cy="6" rx="6" ry="11" fill="${SKIN}" stroke="#fff" stroke-width="3" transform="rotate(${t<0?-30:30} ${t} 6)"/><rect x="-13" y="-24" width="26" height="48" rx="13" fill="${SKIN}" stroke="#fff" stroke-width="4"/></g>`;
+PIC.rinse=`<path d="M8 24h34a16 16 0 0 1 16 16v6" stroke="#fff" stroke-width="20" fill="none" stroke-linecap="round"/>
+    <path d="M8 24h34a16 16 0 0 1 16 16v6" stroke="#4D96FF" stroke-width="12" fill="none" stroke-linecap="round"/>
+    <rect x="16" y="6" width="22" height="9" rx="4.5" fill="#4D96FF" stroke="#fff" stroke-width="3"/><rect x="24" y="12" width="6" height="8" fill="#4D96FF"/>
+    <path d="M58 54v18" stroke="#fff" stroke-width="12" stroke-linecap="round"/><path d="M58 54v18" stroke="#2EC4B6" stroke-width="7" stroke-linecap="round"/>
+    ${hand(56,82,75,-15)}
+    ${drop(30,70,.8)}${drop(88,66,.8)}${bubble(20,88,5)}${bubble(94,86,4)}`;
+PIC.scrub=`<path d="M8 40q-6 12 0 24M92 40q6 12 0 24" stroke="#A9CBEF" stroke-width="4" fill="none" stroke-linecap="round"/>${hand(38,52,-18,-15)}${hand(62,52,18,15)}${bubble(30,24,8)}${bubble(52,18,10)}${bubble(72,26,7)}${bubble(50,48,9)}${bubble(36,70,7)}${bubble(64,72,8)}${bubble(50,86,5)}`;
+PIC.bath=`<path d="M16 44V20h14" stroke="#fff" stroke-width="13" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 44V20h14" stroke="#8E44AD" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round"/>${bubble(30,38,9)}${bubble(48,32,12)}${bubble(68,36,10)}${bubble(84,30,7)}
+    <rect x="20" y="78" width="9" height="12" rx="4" fill="#4D96FF"/><rect x="71" y="78" width="9" height="12" rx="4" fill="#4D96FF"/>
+    <path d="M8 48h84v8c0 16-12 28-28 28H36C20 84 8 72 8 56z" fill="#4D96FF" stroke="#fff" stroke-width="5" stroke-linejoin="round"/>${face(50,62,1,"#FFFDF7")}`;
+PIC.pjs=`<path d="M32 12L10 25l9 17 10-5v47h42V37l10 5 9-17-22-13c-3 8-10 12-18 12s-15-4-18-12z" fill="#8E44AD" stroke="#fff" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M60 50a7 7 0 1 0 6 10 6 6 0 0 1-6-10z" fill="#FFD23F"/><circle cx="40" cy="46" r="3.5" fill="#FFD23F"/><circle cx="44" cy="70" r="3.5" fill="#FFD23F"/><circle cx="64" cy="76" r="3" fill="#FFD23F"/><circle cx="22" cy="30" r="2.5" fill="#FFD23F"/><circle cx="78" cy="30" r="2.5" fill="#FFD23F"/>`;
+PIC.lamp=`<path d="M80 6a12 12 0 1 0 12 16 10 10 0 0 1-12-16z" fill="#FFD23F" stroke="#fff" stroke-width="3"/>
+    <rect x="45" y="50" width="10" height="30" fill="#4D96FF"/><path d="M66 50v14" stroke="#4D96FF" stroke-width="3"/><circle cx="66" cy="66" r="4" fill="#4D96FF"/>
+    <rect x="28" y="78" width="44" height="11" rx="5.5" fill="#FF9F1C" stroke="#fff" stroke-width="4"/>
+    <path d="M30 18h40l13 34H17z" fill="#FF9F1C" stroke="#fff" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M38 36q4 4 8 0M54 36q4 4 8 0" stroke="#2B2D42" stroke-width="3" fill="none" stroke-linecap="round"/><circle cx="34" cy="43" r="3.4" fill="#F7A8B8"/><circle cx="66" cy="43" r="3.4" fill="#F7A8B8"/>`;
+PIC.sleep=`<path d="M50 12a36 36 0 1 0 34 50A30 30 0 0 1 50 12z" fill="#FFD23F" stroke="#fff" stroke-width="5" stroke-linejoin="round"/>
+    <path d="M28 52q4 4 8 0M44 54q4 4 8 0" stroke="#2B2D42" stroke-width="3" fill="none" stroke-linecap="round"/><circle cx="26" cy="62" r="3.4" fill="#F7A8B8"/><circle cx="52" cy="64" r="3.4" fill="#F7A8B8"/><path d="M36 66q4 3 8 0" stroke="#2B2D42" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+    <text x="68" y="40" font-family="Fredoka, Arial, sans-serif" font-weight="700" font-size="20" fill="#4D96FF">Z</text><text x="82" y="24" font-family="Fredoka, Arial, sans-serif" font-weight="700" font-size="14" fill="#4D96FF">z</text>`;
+const svg=k=>`<svg viewBox="0 0 100 100" aria-hidden="true">${PIC[k]}</svg>`;
+const starSVG=(on)=>`<svg viewBox="0 0 40 40" aria-hidden="true"><path d="M20 3l5 10.5 11.5 1.5-8.4 8 2.1 11.4L20 29l-10.2 5.4L11.9 23l-8.4-8L15 13.5z" fill="${on?"#FFD23F":"#E1E6EE"}" stroke="#fff" stroke-width="3" stroke-linejoin="round"/></svg>`;
+const checkSVG=`<svg class="check" viewBox="0 0 28 28" aria-hidden="true"><circle cx="14" cy="14" r="12" fill="#3DB86A" stroke="#fff" stroke-width="3"/><path d="M8.5 14.5l3.5 3.5 7-7.5" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
+/* ---------- levels ---------- */
+const LEVELS=[
+  {topic:"Morning",        steps:[["clock","Wake up"],["eat","Eat breakfast"],["bus","Ride the bus"]]},
+  {topic:"Going outside",  steps:[["sock","Socks on"],["shoe","Shoes on"],["outside","Go outside"]]},
+  {topic:"Brush your teeth",steps:[["paste","Toothpaste on a brush"],["brush","Brush teeth"],["cup","Rinse"]]},
+  {topic:"Go to bed",      steps:[["bath","Take a bath"],["pjs","Pajamas on"],["lamp","Lights off"],["sleep","Go to sleep"]]},
+  {topic:"Cereal time",    steps:[["cereal","Pour cereal"],["milk","Pour milk"],["eat","Eat"],["sink","Wash the bowl"]]},
+  {topic:"Wash your hands",steps:[["wet","Wet hands"],["soap","Soap"],["scrub","Scrub hands"],["rinse","Rinse hands"],["towel","Dry hands"]]}
+];
+const BADGE=["#2EC4B6","#4D96FF","#FF9F1C","#8E44AD","#3DB86A"];
+const slotNames=n=>n===3?["First","Next","Last"]:n===4?["First","Next","Then","Last"]:["First","Next","Then","After","Last"];
+
+/* ---------- state ---------- */
+const $=id=>document.getElementById(id);
+const S={level:0,placed:[],locked:[],tray:[],helper:false,words:true,sound:true,done:{},misses:0,won:false,busy:false};
+
+/* ---------- sound ---------- */
+let ctx=null;
+function tone(f,dur=.12,type="sine",when=0,vol=.18){
+  if(!S.sound)return;
+  try{ctx=ctx||new (window.AudioContext||window.webkitAudioContext)();
+    const t=ctx.currentTime+when,o=ctx.createOscillator(),g=ctx.createGain();
+    o.type=type;o.frequency.value=f;g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.001,t+dur);
+    o.connect(g).connect(ctx.destination);o.start(t);o.stop(t+dur+.02);}catch(e){}
+}
+const sfx={
+  place:()=>tone(620,.09,"triangle"),
+  back:()=>tone(420,.09,"triangle"),
+  ding:()=>{tone(784,.12,"triangle");tone(1047,.16,"triangle",.08)},
+  boop:()=>{tone(260,.16,"sine",0,.16);tone(220,.18,"sine",.09,.12)},
+  note:i=>tone([523,659,784,988][i]||1047,.2,"triangle"),
+  win:()=>[523,659,784,1047].forEach((f,i)=>tone(f,.18,"triangle",i*.12,.18))
+};
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+function msg(t){$("msg").textContent=t;}
+
+/* ---------- render ---------- */
+const L=()=>LEVELS[S.level];
+const label=id=>L().steps.find(s=>s[0]===id)[1];
+function cardHTML(id,from,extra=""){
+  return `<button type="button" class="card ${extra}" data-card="${id}" data-from="${from}" aria-label="${label(id)}"><span class="pic">${svg(id)}</span><span class="word">${label(id)}</span></button>`;
+}
+function renderLevels(){
+  $("levels").innerHTML=LEVELS.map((_,i)=>`<button class="lv" data-i="${i}" aria-label="Level ${i+1}${S.done[i]?", done":""}" aria-current="${i===S.level}">${i+1}${S.done[i]?`<span class="st">${starSVG(true)}</span>`:""}</button>`).join("");
+}
+function render(popId){
+  const n=L().steps.length,names=slotNames(n);
+  $("slots").className="slots n"+n;
+  $("slots").style.gridTemplateColumns=`repeat(${n},minmax(0,1fr))`;
+  $("slots").innerHTML=names.map((nm,i)=>{
+    const id=S.placed[i],lk=S.locked[i];
+    return `<div class="slot${lk?" ok":""}" data-slot="${i}"><span class="badge"><b style="background:${BADGE[i]}">${i+1}</b><span>${nm}</span></span>
+      ${id?cardHTML(id,i,(lk?"locked ":"")+(id===popId?"pop":"")):'<span class="empty" aria-hidden="true"></span>'}${lk?checkSVG:""}</div>`;
+  }).join("");
+  $("tray").innerHTML=S.tray.map(id=>cardHTML(id,"tray",id===popId?"pop":"")).join("");
+  document.body.classList.toggle("nowords",!S.words);
+  const full=S.placed.every(Boolean);
+  $("checkBtn").hidden=S.helper;
+  $("checkBtn").disabled=!full||S.won||S.busy;
+  $("reset").disabled=S.won||S.busy;
+}
+function shuffle(ids){
+  let a;do{a=[...ids].sort(()=>Math.random()-.5);}while(a.join()===ids.join());
+  return a;
+}
+function loadLevel(i){
+  S.level=i;S.won=false;S.busy=false;S.misses=0;
+  const ids=L().steps.map(s=>s[0]);
+  S.placed=ids.map(()=>null);S.locked=ids.map(()=>false);S.tray=shuffle(ids);
+  $("topic").textContent=L().topic;
+  msg(S.helper?"Tap the picture that comes first.":"Put the pictures in order. Then press Check.");
+  const w=$("stage").querySelector(".win");if(w)w.remove();
+  const c=$("stage").querySelector(".confetti");if(c)c.remove();
+  renderLevels();render();
+}
+
+/* ---------- moves ---------- */
+function removeFrom(from){
+  if(from==="tray")return;
+  S.placed[from]=null;
+}
+function shakeSlot(i){const el=document.querySelector(`.slot[data-slot="${i}"]`);if(!el)return;el.classList.remove("shake");void el.offsetWidth;el.classList.add("shake");}
+function placeAt(id,from,i){
+  if(S.won||S.busy)return;
+  if(S.locked[i]){shakeSlot(i);sfx.boop();return;}
+  const correct=L().steps[i][0]===id;
+  if(S.helper){
+    if(!correct){S.misses++;sfx.boop();render();shakeSlot(i);msg(`Not that one yet. What comes ${slotNames(L().steps.length)[i].toLowerCase()}?`);return;}
+    S.tray=S.tray.filter(x=>x!==id);removeFrom(from);
+    S.placed[i]=id;S.locked[i]=true;sfx.ding();render(id);
+    if(S.locked.every(Boolean))win();else msg("Yes! What comes next?");
+    return;
+  }
+  const other=S.placed[i];
+  if(from==="tray")S.tray=S.tray.filter(x=>x!==id);else S.placed[from]=null;
+  if(other&&other!==id){ if(from==="tray")S.tray.push(other); else S.placed[from]=other; }
+  S.placed[i]=id;sfx.place();render(id);
+  msg(S.placed.every(Boolean)?"All the spots are full. Press Check!":"Good! Keep going.");
+}
+function toTray(from){
+  if(S.won||S.busy||from==="tray"||S.locked[from])return;
+  const id=S.placed[from];if(!id)return;
+  S.placed[from]=null;S.tray.push(id);sfx.back();render(id);
+}
+function tapCard(id,from){
+  if(from==="tray"){
+    const i=S.placed.findIndex((p,k)=>!p&&!S.locked[k]);
+    if(i<0){msg("All the spots are full. Press Check, or tap a card to send it back.");return;}
+    placeAt(id,from,i);
+  }else toTray(+from);
+}
+async function check(){
+  if(S.busy||S.won||!S.placed.every(Boolean))return;
+  S.busy=true;render();
+  const wrong=[];
+  L().steps.forEach((s,i)=>{if(S.placed[i]===s[0])S.locked[i]=true;else wrong.push(i);});
+  if(!wrong.length){S.busy=false;win();return;}
+  S.misses++;render();sfx.boop();wrong.forEach(shakeSlot);
+  msg(S.locked.some(Boolean)?"Some are in the right spot! Let's try the others.":"Hmm, let's try again. What happens first?");
+  await wait(650);
+  wrong.forEach(i=>{S.tray.push(S.placed[i]);S.placed[i]=null;});
+  S.busy=false;render();
+}
+async function win(){
+  S.won=true;S.done[S.level]=true;render();renderLevels();
+  msg("You did it! Let's see it in order.");
+  const slots=[...document.querySelectorAll(".slot")];
+  for(let i=0;i<slots.length;i++){slots[i].classList.add("glow");sfx.note(i);await wait(520);slots[i].classList.remove("glow");}
+  sfx.win();
+  if(!matchMedia("(prefers-reduced-motion: reduce)").matches){
+    const c=document.createElement("div");c.className="confetti";
+    const cols=["#2EC4B6","#4D96FF","#FF9F1C","#8E44AD","#FFD23F","#E63946","#3DB86A"];
+    for(let i=0;i<36;i++){const p=document.createElement("i");p.style.left=Math.random()*100+"%";p.style.background=cols[i%cols.length];p.style.animationDelay=(Math.random()*.5)+"s";c.appendChild(p);}
+    $("stage").appendChild(c);
+  }
+  const stars=S.misses===0?3:S.misses<=2?2:1, last=S.level===LEVELS.length-1;
+  const w=document.createElement("div");w.className="win";
+  w.innerHTML=`<div class="cardw"><h2>You did it!</h2><div class="stars">${[0,1,2].map(i=>starSVG(i<stars)).join("")}</div>
+    <button class="btn next" id="nextBtn">${last?"Play again":"Next level"}</button></div>`;
+  $("stage").appendChild(w);
+  msg(last?"You finished every routine. Great job putting things in order!":"Great job putting things in order!");
+  $("nextBtn").focus();
+  $("nextBtn").onclick=()=>{sfx.place();loadLevel(last?0:S.level+1);};
+}
+
+/* ---------- tap + drag ---------- */
+let drag=null,suppress=false;
+document.addEventListener("pointerdown",e=>{
+  const c=e.target.closest(".card");
+  if(!c||c.classList.contains("locked")||S.won||S.busy||e.button>0)return;
+  drag={el:c,id:c.dataset.card,from:c.dataset.from,x0:e.clientX,y0:e.clientY,moved:false,ghost:null,pid:e.pointerId};
+});
+document.addEventListener("pointermove",e=>{
+  if(!drag||e.pointerId!==drag.pid)return;
+  const dx=e.clientX-drag.x0,dy=e.clientY-drag.y0;
+  if(!drag.moved&&Math.hypot(dx,dy)>10){
+    drag.moved=true;const r=drag.el.getBoundingClientRect();
+    const g=drag.el.cloneNode(true);g.classList.add("ghost");g.classList.remove("pop");
+    g.style.left=r.left+"px";g.style.top=r.top+"px";g.style.width=r.width+"px";
+    document.body.appendChild(g);drag.ghost=g;drag.el.classList.add("lift");
+  }
+  if(drag.moved){
+    e.preventDefault();
+    drag.ghost.style.transform=`translate(${dx}px,${dy}px) rotate(-3deg) scale(1.04)`;
+    document.querySelectorAll(".slot.over").forEach(s=>s.classList.remove("over"));
+    const s=document.elementFromPoint(e.clientX,e.clientY)?.closest(".slot");if(s)s.classList.add("over");
+  }
+},{passive:false});
+function endDrag(e){
+  if(!drag||e.pointerId!==drag.pid)return;
+  const d=drag;drag=null;
+  if(!d.moved)return;
+  suppress=true;setTimeout(()=>suppress=false,0);
+  d.ghost.remove();d.el.classList.remove("lift");
+  document.querySelectorAll(".slot.over").forEach(s=>s.classList.remove("over"));
+  if(e.type==="pointercancel")return;
+  const under=document.elementFromPoint(e.clientX,e.clientY);
+  const s=under?.closest(".slot"),t=under?.closest("#tray");
+  if(s)placeAt(d.id,d.from==="tray"?"tray":+d.from,+s.dataset.slot);
+  else if(t&&d.from!=="tray")toTray(+d.from);
+}
+document.addEventListener("pointerup",endDrag);
+document.addEventListener("pointercancel",endDrag);
+document.addEventListener("click",e=>{
+  if(suppress)return;
+  const c=e.target.closest(".card");
+  if(c){if(!c.classList.contains("locked"))tapCard(c.dataset.card,c.dataset.from==="tray"?"tray":c.dataset.from);return;}
+  const s=e.target.closest(".slot");
+  if(s&&!s.querySelector(".card")){const first=S.tray[0];if(first&&!S.helper)placeAt(first,"tray",+s.dataset.slot);}
+});
+
+/* ---------- controls ---------- */
+$("checkBtn").onclick=check;
+$("reset").onclick=()=>{sfx.back();const m=S.misses;loadLevel(S.level);S.misses=m;};
+$("levels").addEventListener("click",e=>{const b=e.target.closest(".lv");if(b&&!S.busy){sfx.place();loadLevel(+b.dataset.i);}});
+function setSound(v){S.sound=v;$("sound").setAttribute("aria-pressed",v);$("tSound").setAttribute("aria-pressed",v);}
+$("sound").onclick=()=>setSound(!S.sound);
+$("tSound").onclick=()=>setSound(!S.sound);
+$("tHelp").onclick=()=>{S.helper=!S.helper;$("tHelp").setAttribute("aria-pressed",S.helper);loadLevel(S.level);};
+$("tWords").onclick=()=>{S.words=!S.words;$("tWords").setAttribute("aria-pressed",S.words);render();};
+$("resetStars").onclick=()=>{S.done={};renderLevels();};
+$("teacher").onclick=()=>{$("drawer").hidden=false;$("closeT").focus();};
+$("closeT").onclick=()=>{$("drawer").hidden=true;$("teacher").focus();};
+$("drawer").addEventListener("click",e=>{if(e.target.id==="drawer")$("drawer").hidden=true;});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("drawer").hidden)$("drawer").hidden=true;});
+
+/* ---------- boot ---------- */
+function start(data){
+  data=data||{};
+  if(data.done)S.done=data.done;
+  if(typeof data.helper==="boolean")S.helper=data.helper;
+  if(typeof data.words==="boolean")S.words=data.words;
+  if(typeof data.sound==="boolean")S.sound=data.sound;
+  $("tHelp").setAttribute("aria-pressed",S.helper);$("tWords").setAttribute("aria-pressed",S.words);setSound(S.sound);
+  loadLevel(data.level||0);
+  try{window.claude?.hot?.snapshot?.(()=>({level:S.level,done:S.done,helper:S.helper,words:S.words,sound:S.sound}));}catch(e){}
+}
+window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
+})();
+</script>
+
+</body></html>

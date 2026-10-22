@@ -1,0 +1,462 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Robot to the Snack</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap">
+<style>
+/* Layout: one calm classroom screen — board on the left, arrow pad + program strip on the right; stacks on narrow screens.
+   Deliberately single-theme (classroom cream) so it always looks the same on every device. */
+:root{
+  --cream:#FFFDF7; --navy:#2B2D42; --turq:#2EC4B6; --blue:#4D96FF; --orange:#FF9F1C; --purple:#8E44AD;
+  --yellow:#FFD23F; --yellow-2:#FFC21A; --red:#E63946; --red-2:#B5202B; --green:#3DB86A; --pink:#F7A8B8;
+  --line:#A9CBEF; --margin:#F2A0A6; --board:#D9F3EF; --cell:#FFFFFF; --soft:#EEF2F7; --rock:#B9B3CC;
+  --display:"Fredoka", "Arial Rounded MT Bold", Arial, sans-serif;
+  --body:Arial, Helvetica, sans-serif;
+  --r:20px;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{background:var(--cream)}
+body{color:var(--navy);font-family:var(--body);font-size:18px;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));
+  padding-block:14px 32px;-webkit-tap-highlight-color:transparent}
+.wrap{max-width:1040px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+
+/* header */
+header{display:flex;flex-wrap:wrap;align-items:center;gap:12px 16px;justify-content:space-between}
+h1{font-family:var(--display);font-weight:700;font-size:clamp(26px,4vw,36px);margin:0;line-height:1.1;
+  display:flex;align-items:center;gap:10px;text-wrap:balance}
+h1 .dash{border:3px dashed var(--turq);border-radius:16px;padding:4px 14px}
+.levels{display:flex;flex-wrap:wrap;gap:8px}
+.lv{font-family:var(--display);font-weight:600;font-size:18px;width:44px;height:44px;border-radius:14px;
+  border:3px solid #fff;background:var(--soft);color:var(--navy);cursor:pointer;position:relative;
+  box-shadow:inset 0 0 0 2px rgba(255,255,255,.5),0 3px 0 rgba(43,45,66,.10)}
+.lv[aria-current="true"]{background:var(--turq);color:#fff}
+.lv .st{position:absolute;right:-6px;top:-8px;width:20px;height:20px}
+.tools{display:flex;gap:8px}
+.icon{width:52px;height:52px;border-radius:16px;border:3px solid #fff;background:var(--soft);cursor:pointer;
+  display:grid;place-items:center;box-shadow:inset 0 0 0 2px rgba(255,255,255,.5),0 3px 0 rgba(43,45,66,.10)}
+.icon svg{width:28px;height:28px}
+.icon[aria-pressed="false"]{opacity:.55}
+
+/* main */
+main{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:760px){main{grid-template-columns:1fr}}
+
+.say{font-family:var(--display);font-weight:600;font-size:clamp(20px,2.6vw,26px);min-height:2.6em;
+  display:flex;align-items:center;gap:12px;margin:0 0 10px}
+.say .bubble{background:#fff;border:3px solid var(--line);border-radius:18px;padding:8px 16px;line-height:1.2}
+
+.board{position:relative;width:100%;max-width:100%;aspect-ratio:5/4;background:var(--board);border-radius:26px;
+  border:5px solid #fff;box-shadow:inset 0 0 0 3px rgba(255,255,255,.6),0 6px 0 rgba(43,45,66,.08);padding:8px}
+.grid,.layer{position:absolute;inset:8px}
+.grid{display:grid;grid-template-columns:repeat(5,1fr);grid-template-rows:repeat(4,1fr)}
+.cell{position:relative}
+.cell::before{content:"";position:absolute;inset:5px;border-radius:16px;background:var(--cell);
+  background-image:repeating-linear-gradient(to bottom,transparent 0 22%,rgba(169,203,239,.45) 22% 24%)}
+.dot{position:absolute;left:50%;top:50%;width:22%;aspect-ratio:1;border-radius:50%;background:var(--yellow);
+  transform:translate(-50%,-50%);border:3px solid #fff;z-index:1}
+.piece{position:absolute;width:20%;height:25%;display:grid;place-items:center;pointer-events:none;
+  transition:left .42s cubic-bezier(.5,1.4,.6,1),top .42s cubic-bezier(.5,1.4,.6,1)}
+.piece svg{width:82%;height:82%;overflow:visible}
+.piece .inner{width:100%;height:100%;display:grid;place-items:center}
+.bonk .inner{animation:bonk .5s ease}
+@keyframes bonk{0%,100%{transform:translate(0,0)}35%{transform:translate(var(--dx),var(--dy)) rotate(-6deg)}60%{transform:translate(0,0) rotate(5deg)}80%{transform:rotate(-3deg)}}
+.happy .inner{animation:hop .5s ease 3}
+@keyframes hop{50%{transform:translateY(-18%) scale(1.05)}}
+.eaten .inner{animation:gone .5s ease forwards}
+@keyframes gone{to{transform:scale(0) rotate(30deg);opacity:0}}
+
+/* win card */
+.win{position:absolute;inset:0;display:grid;place-items:center;background:rgba(255,253,247,.72);border-radius:20px;z-index:5}
+.win .card{background:#fff;border:5px solid var(--yellow);border-radius:26px;padding:18px 26px;text-align:center;
+  display:flex;flex-direction:column;align-items:center;gap:10px;box-shadow:0 8px 0 rgba(43,45,66,.08)}
+.win h2{font-family:var(--display);font-size:clamp(28px,4vw,40px);margin:0}
+.win .stars{display:flex;gap:6px}
+.win .stars svg{width:46px;height:46px}
+.confetti{position:absolute;inset:0;overflow:hidden;pointer-events:none;border-radius:20px;z-index:6}
+.confetti i{position:absolute;top:-20px;width:14px;height:14px;border-radius:4px;border:2px solid #fff;animation:fall 1.6s ease-in forwards}
+@keyframes fall{to{transform:translateY(600px) rotate(360deg);opacity:.2}}
+
+/* controls */
+.panel{display:flex;flex-direction:column;gap:16px}
+.pad{display:grid;grid-template-columns:repeat(3,minmax(0,96px));grid-template-rows:repeat(2,96px);gap:10px;justify-content:center}
+.arrow{border-radius:24px;border:5px solid #fff;cursor:pointer;display:grid;place-items:center;
+  box-shadow:inset 0 0 0 3px rgba(255,255,255,.35),0 5px 0 rgba(43,45,66,.14);transition:transform .08s}
+.arrow:active{transform:translateY(3px);box-shadow:inset 0 0 0 3px rgba(255,255,255,.35),0 2px 0 rgba(43,45,66,.14)}
+.arrow svg{width:56%;height:56%}
+.arrow[data-d="up"]{grid-column:2;grid-row:1;background:var(--turq)}
+.arrow[data-d="left"]{grid-column:1;grid-row:2;background:var(--purple)}
+.arrow[data-d="down"]{grid-column:2;grid-row:2;background:var(--orange)}
+.arrow[data-d="right"]{grid-column:3;grid-row:2;background:var(--blue)}
+button:disabled{cursor:default;opacity:.5}
+button:focus-visible{outline:4px solid var(--navy);outline-offset:3px}
+
+.label{font-family:var(--display);font-weight:600;font-size:18px;margin:0 0 6px;letter-spacing:.02em}
+.strip{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:6px;background:#fff;border:3px solid var(--line);
+  border-radius:20px;padding:8px}
+.slot{aspect-ratio:1;border-radius:12px;background:var(--soft);display:grid;place-items:center;position:relative;
+  border:2px dashed #C9D3E0}
+.slot.full{border:3px solid #fff;box-shadow:inset 0 0 0 2px rgba(255,255,255,.35)}
+.slot svg{width:60%;height:60%}
+.slot.now{outline:4px solid var(--yellow);outline-offset:2px;transform:scale(1.08)}
+.slot.miss{outline:4px solid var(--red);outline-offset:2px}
+
+.actions{display:grid;grid-template-columns:1fr 1fr 1.6fr;gap:10px}
+.btn{font-family:var(--display);font-weight:600;font-size:22px;border-radius:20px;border:4px solid #fff;cursor:pointer;
+  min-height:70px;display:flex;align-items:center;justify-content:center;gap:8px;color:var(--navy);background:var(--soft);
+  box-shadow:inset 0 0 0 2px rgba(255,255,255,.5),0 4px 0 rgba(43,45,66,.12)}
+.btn svg{width:28px;height:28px}
+.btn.go{background:var(--green);color:#fff;font-size:28px}
+.btn.next{background:var(--turq);color:#fff;min-height:60px;padding:0 26px}
+.taphint{font-size:16px;color:#5A5D73;margin:0;text-align:center}
+
+/* teacher drawer */
+.drawer{position:fixed;inset:0;background:rgba(43,45,66,.35);display:grid;place-items:center;z-index:20;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px))}
+.sheet{background:var(--cream);border:5px solid #fff;border-radius:26px;padding:20px 22px;width:min(480px,100%);
+  max-height:90vh;overflow:auto;display:flex;flex-direction:column;gap:14px;box-shadow:0 10px 0 rgba(43,45,66,.12)}
+.sheet h2{font-family:var(--display);margin:0;font-size:26px}
+.sheet p{margin:0;font-size:15px;color:#5A5D73;line-height:1.4}
+.row{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:17px}
+.seg{display:flex;gap:6px}
+.seg button{font-family:var(--display);font-weight:600;font-size:16px;padding:10px 14px;border-radius:14px;border:3px solid #fff;
+  background:var(--soft);color:var(--navy);cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--purple);color:#fff}
+.toggle{width:64px;height:38px;border-radius:20px;border:3px solid #fff;background:#C9D3E0;position:relative;cursor:pointer;flex:none}
+.toggle::after{content:"";position:absolute;top:3px;left:3px;width:26px;height:26px;border-radius:50%;background:#fff;transition:left .15s}
+.toggle[aria-pressed="true"]{background:var(--turq)}
+.toggle[aria-pressed="true"]::after{left:29px}
+.sheet .close{align-self:flex-end}
+
+@media (prefers-reduced-motion:reduce){
+  .piece{transition:none}
+  .bonk .inner,.happy .inner,.eaten .inner,.confetti i{animation:none}
+}
+@media (max-width:420px){
+  .pad{grid-template-columns:repeat(3,minmax(0,84px));grid-template-rows:repeat(2,84px)}
+  .btn{font-size:19px}
+  .btn.go{font-size:23px}
+}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1><span class="dash">Robot to the Snack</span></h1>
+    <div class="levels" id="levels" aria-label="Levels"></div>
+    <div class="tools">
+      <button class="icon" id="sound" aria-pressed="true" aria-label="Sounds on or off" title="Sounds on/off">
+        <svg viewBox="0 0 24 24"><path d="M9 17V5l11-2v12" stroke="#2B2D42" stroke-width="2.2" fill="none" stroke-linejoin="round"/><circle cx="6.5" cy="17.5" r="3" fill="#2B2D42"/><circle cx="17.5" cy="15.5" r="3" fill="#2B2D42"/></svg>
+      </button>
+      <button class="icon" id="teacher" aria-label="Teacher settings" title="Teacher settings">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2" fill="none" stroke="#2B2D42" stroke-width="2.2"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1" stroke="#2B2D42" stroke-width="2.2" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <main>
+    <section>
+      <p class="say" aria-live="polite"><span class="bubble" id="msg">Help Robo get to the apple!</span></p>
+      <div class="board" id="board">
+        <div class="grid" id="grid"></div>
+        <div class="layer" id="layer"></div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div>
+        <p class="label" id="padLabel">Tap arrows to plan Robo's steps</p>
+        <div class="pad" id="pad">
+          <button class="arrow" data-d="up" aria-label="Up"></button>
+          <button class="arrow" data-d="left" aria-label="Left"></button>
+          <button class="arrow" data-d="down" aria-label="Down"></button>
+          <button class="arrow" data-d="right" aria-label="Right"></button>
+        </div>
+      </div>
+      <div id="planArea">
+        <p class="label">Robo's plan</p>
+        <div class="strip" id="strip" aria-label="Robo's plan"></div>
+      </div>
+      <div class="actions" id="actions">
+        <button class="btn" id="undo" aria-label="Take back last step">
+          <svg viewBox="0 0 24 24"><path d="M9 7 4 12l5 5M4 12h11a5 5 0 0 1 0 10h-2" stroke="#2B2D42" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>Back
+        </button>
+        <button class="btn" id="clear" aria-label="Clear the plan">
+          <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18" stroke="#2B2D42" stroke-width="2.8" stroke-linecap="round"/></svg>Clear
+        </button>
+        <button class="btn go" id="go">
+          <svg viewBox="0 0 24 24"><path d="M7 4.5v15l12-7.5z" fill="#fff"/></svg>Go!
+        </button>
+      </div>
+      <p class="taphint" id="tapHint" hidden>Robo moves each time you tap an arrow.</p>
+    </section>
+  </main>
+</div>
+
+<div class="drawer" id="drawer" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="tTitle">
+    <h2 id="tTitle">Teacher settings</h2>
+    <div class="row"><span>How Robo moves</span>
+      <div class="seg" id="modeSeg">
+        <button data-m="plan" aria-pressed="true">Plan &amp; Go</button>
+        <button data-m="tap" aria-pressed="false">Tap &amp; Go</button>
+      </div>
+    </div>
+    <p><b>Plan &amp; Go</b> builds a list of steps, then runs it (real sequencing). <b>Tap &amp; Go</b> moves Robo right away on each tap, a gentler start for students not ready to plan ahead.</p>
+    <div class="row"><span>Show path dots</span><button class="toggle" id="tDots" aria-pressed="false" aria-label="Show path dots"></button></div>
+    <div class="row"><span>Sounds</span><button class="toggle" id="tSound" aria-pressed="true" aria-label="Sounds"></button></div>
+    <div class="row"><span>Stars earned</span><button class="btn" id="resetStars" style="min-height:48px;font-size:17px;padding:0 16px">Reset stars</button></div>
+    <p>Keyboard and switch friendly: arrow keys add steps, Enter runs, Backspace takes one back.</p>
+    <button class="btn next close" id="closeT">Done</button>
+  </div>
+</div>
+
+<script>
+(function(){
+const COLS=5, ROWS=4, MAX=8;
+const DIRS={up:[0,-1],down:[0,1],left:[-1,0],right:[1,0]};
+const COLORS={up:"#2EC4B6",down:"#FF9F1C",left:"#8E44AD",right:"#4D96FF"};
+const ROT={up:-90,down:90,left:180,right:0};
+const LEVELS=[
+  {r:[1,1],a:[2,1],rocks:[]},
+  {r:[0,1],a:[2,1],rocks:[]},
+  {r:[2,3],a:[2,1],rocks:[]},
+  {r:[0,2],a:[3,2],rocks:[]},
+  {r:[1,0],a:[2,1],rocks:[]},
+  {r:[0,3],a:[2,1],rocks:[]},
+  {r:[0,1],a:[2,1],rocks:[[1,1]]},
+  {r:[0,0],a:[4,3],rocks:[[1,1],[1,2],[3,1],[3,2]]}
+];
+
+const arrowSVG=(d,fill="#fff")=>`<svg viewBox="0 0 40 40" aria-hidden="true"><g transform="rotate(${ROT[d]} 20 20)"><path d="M6 15h15V7l13 13-13 13v-8H6z" fill="${fill}" stroke="${fill}" stroke-width="3" stroke-linejoin="round"/></g></svg>`;
+const starSVG=(on)=>`<svg viewBox="0 0 40 40" aria-hidden="true"><path d="M20 3l5 10.5 11.5 1.5-8.4 8 2.1 11.4L20 29l-10.2 5.4L11.9 23l-8.4-8L15 13.5z" fill="${on?"#FFD23F":"#E1E6EE"}" stroke="#fff" stroke-width="3" stroke-linejoin="round"/></svg>`;
+const ROBOT=`<svg viewBox="0 0 100 100" aria-hidden="true">
+  <line x1="50" y1="20" x2="50" y2="8" stroke="#fff" stroke-width="7" stroke-linecap="round"/>
+  <line x1="50" y1="20" x2="50" y2="8" stroke="#4D96FF" stroke-width="3.5" stroke-linecap="round"/>
+  <circle cx="50" cy="8" r="7" fill="#FFD23F" stroke="#fff" stroke-width="3"/>
+  <rect x="14" y="20" width="72" height="62" rx="22" fill="#4D96FF" stroke="#fff" stroke-width="5"/>
+  <rect x="19" y="25" width="62" height="52" rx="17" fill="none" stroke="rgba(255,255,255,.35)" stroke-width="2"/>
+  <rect x="25" y="32" width="50" height="34" rx="13" fill="#FFFDF7"/>
+  <circle cx="40" cy="46" r="4.5" fill="#2B2D42"/><circle cx="60" cy="46" r="4.5" fill="#2B2D42"/>
+  <circle cx="33" cy="55" r="4" fill="#F7A8B8"/><circle cx="67" cy="55" r="4" fill="#F7A8B8"/>
+  <path d="M44 55q6 5 12 0" stroke="#2B2D42" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <rect x="22" y="80" width="18" height="12" rx="6" fill="#2EC4B6" stroke="#fff" stroke-width="3"/>
+  <rect x="60" y="80" width="18" height="12" rx="6" fill="#2EC4B6" stroke="#fff" stroke-width="3"/>
+</svg>`;
+const APPLE=`<svg viewBox="0 0 100 100" aria-hidden="true">
+  <path d="M50 28c-8-8-34-8-34 20 0 22 16 40 26 40 4 0 6-2 8-2s4 2 8 2c10 0 26-18 26-40 0-28-26-28-34-20z" fill="#E63946" stroke="#fff" stroke-width="5"/>
+  <path d="M30 44c0-8 6-12 12-12" stroke="rgba(255,255,255,.7)" stroke-width="5" fill="none" stroke-linecap="round"/>
+  <path d="M68 50c0 16-8 28-16 32" stroke="#B5202B" stroke-width="5" fill="none" stroke-linecap="round" opacity=".45"/>
+  <path d="M50 30c0-8 2-14 6-18" stroke="#2B2D42" stroke-width="4" fill="none" stroke-linecap="round"/>
+  <path d="M55 20c6-10 18-12 22-8-4 8-14 12-22 8z" fill="#3DB86A" stroke="#fff" stroke-width="3"/>
+</svg>`;
+const ROCK=`<svg viewBox="0 0 100 100" aria-hidden="true">
+  <path d="M14 76c-4-14 6-30 18-36 6-14 26-20 38-10 14 4 22 18 18 34-2 10-8 14-18 14H26c-6 0-10-0-12-2z" fill="#B9B3CC" stroke="#fff" stroke-width="5" stroke-linejoin="round"/>
+  <path d="M36 42c4-6 12-8 18-6" stroke="rgba(255,255,255,.6)" stroke-width="4" fill="none" stroke-linecap="round"/>
+  <circle cx="44" cy="62" r="3.5" fill="#2B2D42"/><circle cx="62" cy="62" r="3.5" fill="#2B2D42"/>
+  <path d="M49 69q4 3 8 0" stroke="#2B2D42" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+</svg>`;
+
+const $=id=>document.getElementById(id);
+const S={level:0,program:[],running:false,done:{},mode:"plan",dots:false,voice:true,sound:true,pos:null,won:false};
+let robotEl,appleEl;
+
+/* ---------- sound + voice ---------- */
+let ctx=null;
+function tone(freq,dur=.12,type="sine",when=0,vol=.18){
+  if(!S.sound) return;
+  try{
+    ctx=ctx||new (window.AudioContext||window.webkitAudioContext)();
+    const t=ctx.currentTime+when, o=ctx.createOscillator(), g=ctx.createGain();
+    o.type=type;o.frequency.value=freq;g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.001,t+dur);
+    o.connect(g).connect(ctx.destination);o.start(t);o.stop(t+dur+.02);
+  }catch(e){}
+}
+const sfx={
+  tap:()=>tone(660,.08,"triangle"),
+  step:()=>tone(520,.1,"triangle"),
+  bonk:()=>{tone(200,.18,"sine",0,.2);tone(160,.2,"sine",.08,.15)},
+  win:()=>[523,659,784,1047].forEach((f,i)=>tone(f,.18,"triangle",i*.12,.18)),
+  soft:()=>tone(392,.15,"sine")
+};
+function say(){ /* voice turned off: sound effects only */ }
+function msg(text,speak=true){$("msg").textContent=text; if(speak) say(text);}
+
+/* ---------- path helper (BFS) ---------- */
+function isRock(L,x,y){return L.rocks.some(r=>r[0]===x&&r[1]===y)}
+function path(L){
+  const key=(x,y)=>x+","+y, prev={}, q=[L.r], seen=new Set([key(...L.r)]);
+  while(q.length){
+    const [x,y]=q.shift();
+    if(x===L.a[0]&&y===L.a[1]){const out=[];let k=key(x,y);while(prev[k]){out.unshift(k);k=prev[k]}return out.map(s=>s.split(",").map(Number));}
+    for(const d of Object.values(DIRS)){
+      const nx=x+d[0],ny=y+d[1];
+      if(nx<0||ny<0||nx>=COLS||ny>=ROWS||isRock(L,nx,ny)||seen.has(key(nx,ny)))continue;
+      seen.add(key(nx,ny));prev[key(nx,ny)]=key(x,y);q.push([nx,ny]);
+    }
+  }
+  return [];
+}
+
+/* ---------- rendering ---------- */
+function place(el,[x,y]){el.style.left=(x*100/COLS)+"%";el.style.top=(y*100/ROWS)+"%";}
+function renderLevels(){
+  $("levels").innerHTML=LEVELS.map((_,i)=>`<button class="lv" data-i="${i}" aria-label="Level ${i+1}${S.done[i]?", done":""}" aria-current="${i===S.level}">${i+1}${S.done[i]?`<span class="st">${starSVG(true)}</span>`:""}</button>`).join("");
+}
+function renderBoard(){
+  const L=LEVELS[S.level];
+  const dots=S.dots?path(L).slice(0,-1):[];
+  let cells="";
+  for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){
+    const dot=dots.some(p=>p[0]===x&&p[1]===y);
+    cells+=`<div class="cell">${dot?'<span class="dot"></span>':""}</div>`;
+  }
+  $("grid").innerHTML=cells;
+  const layer=$("layer");layer.innerHTML="";
+  L.rocks.forEach(r=>{const el=document.createElement("div");el.className="piece";el.innerHTML=`<div class="inner">${ROCK}</div>`;place(el,r);layer.appendChild(el);});
+  appleEl=document.createElement("div");appleEl.className="piece";appleEl.innerHTML=`<div class="inner">${APPLE}</div>`;place(appleEl,L.a);layer.appendChild(appleEl);
+  robotEl=document.createElement("div");robotEl.className="piece";robotEl.style.zIndex=3;robotEl.innerHTML=`<div class="inner">${ROBOT}</div>`;
+  S.pos=[...L.r];place(robotEl,S.pos);layer.appendChild(robotEl);
+  const old=$("board").querySelector(".win");if(old)old.remove();
+  const c=$("board").querySelector(".confetti");if(c)c.remove();
+}
+function renderStrip(activeIdx=-1,missIdx=-1){
+  let h="";
+  for(let i=0;i<MAX;i++){
+    const d=S.program[i];
+    h+=d?`<div class="slot full${i===activeIdx?" now":""}${i===missIdx?" miss":""}" style="background:${COLORS[d]}" aria-label="${d}">${arrowSVG(d)}</div>`
+        :`<div class="slot" aria-hidden="true"></div>`;
+  }
+  $("strip").innerHTML=h;
+  const busy=S.running||S.won;
+  $("go").disabled=busy||!S.program.length;
+  $("undo").disabled=busy||!S.program.length;
+  $("clear").disabled=busy||!S.program.length;
+  document.querySelectorAll(".arrow").forEach(b=>b.disabled=busy||(S.mode==="plan"&&S.program.length>=MAX));
+}
+function renderMode(){
+  const tap=S.mode==="tap";
+  $("planArea").hidden=tap;$("actions").hidden=tap;$("tapHint").hidden=!tap;
+  $("padLabel").textContent=tap?"Tap an arrow to move Robo":"Tap arrows to plan Robo's steps";
+  document.querySelectorAll("#modeSeg button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.m===S.mode));
+}
+function intro(){
+  const L=LEVELS[S.level];
+  const t=L.rocks.length?`Level ${S.level+1}. Help Robo get to the apple! Robo can't go on rocks.`:`Level ${S.level+1}. Help Robo get to the apple!`;
+  msg(t.replace(/^Level \d+\. /,""),false);
+  return t;
+}
+function loadLevel(i,speak=true){
+  S.level=i;S.program=[];S.running=false;S.won=false;
+  renderLevels();renderBoard();renderStrip();
+  const t=intro(); if(speak) say(t);
+}
+
+/* ---------- movement ---------- */
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+function canMove(L,[x,y],d){const nx=x+DIRS[d][0],ny=y+DIRS[d][1];
+  if(nx<0||ny<0||nx>=COLS||ny>=ROWS)return null; if(isRock(L,nx,ny))return null; return [nx,ny];}
+async function bonk(d){
+  robotEl.style.setProperty("--dx",(DIRS[d][0]*22)+"%");robotEl.style.setProperty("--dy",(DIRS[d][1]*22)+"%");
+  robotEl.classList.remove("bonk");void robotEl.offsetWidth;robotEl.classList.add("bonk");sfx.bonk();
+  await wait(550);robotEl.classList.remove("bonk");
+}
+function atApple(){const a=LEVELS[S.level].a;return S.pos[0]===a[0]&&S.pos[1]===a[1];}
+async function backToStart(){await wait(500);S.pos=[...LEVELS[S.level].r];place(robotEl,S.pos);await wait(450);}
+
+async function run(){
+  if(S.running||!S.program.length)return;
+  S.running=true;renderStrip();
+  const L=LEVELS[S.level];S.pos=[...L.r];place(robotEl,S.pos);
+  msg("Go, Robo, go!",false);
+  for(let i=0;i<S.program.length;i++){
+    const d=S.program[i];renderStrip(i);
+    const next=canMove(L,S.pos,d);
+    if(!next){
+      renderStrip(-1,i);await bonk(d);
+      msg(L.rocks.length&&isRock(L,S.pos[0]+DIRS[d][0],S.pos[1]+DIRS[d][1])?"Bonk! A rock is in the way. Let's try a different arrow.":"Bonk! That's the edge. Let's try a different arrow.");
+      await backToStart();S.running=false;renderStrip(-1,i);return;
+    }
+    S.pos=next;place(robotEl,S.pos);sfx.step();await wait(560);
+    if(atApple()){await celebrate();return;}
+  }
+  sfx.soft();
+  msg("So close! Robo needs more steps to reach the apple.");
+  await backToStart();S.running=false;renderStrip();
+}
+async function tapMove(d){
+  if(S.running||S.won)return;
+  const L=LEVELS[S.level],next=canMove(L,S.pos,d);
+  if(!next){S.running=true;await bonk(d);S.running=false;msg("Bonk! Try a different arrow.");return;}
+  S.pos=next;place(robotEl,S.pos);sfx.step();
+  if(atApple()){S.running=true;await wait(450);await celebrate();}
+}
+async function celebrate(){
+  S.won=true;S.running=false;S.done[S.level]=true;renderStrip();renderLevels();
+  appleEl.classList.add("eaten");robotEl.classList.add("happy");sfx.win();
+  const steps=S.mode==="plan"?S.program.length:null, best=path(LEVELS[S.level]).length;
+  const stars=steps===null||steps<=best?3:steps<=best+2?2:1;
+  if(!matchMedia("(prefers-reduced-motion: reduce)").matches){
+    const c=document.createElement("div");c.className="confetti";
+    const cols=["#2EC4B6","#4D96FF","#FF9F1C","#8E44AD","#FFD23F","#E63946","#3DB86A"];
+    for(let i=0;i<36;i++){const p=document.createElement("i");p.style.left=Math.random()*100+"%";p.style.background=cols[i%cols.length];p.style.animationDelay=(Math.random()*.5)+"s";c.appendChild(p);}
+    $("board").appendChild(c);
+  }
+  await wait(900);
+  const last=S.level===LEVELS.length-1;
+  const w=document.createElement("div");w.className="win";
+  w.innerHTML=`<div class="card"><h2>Yum! You did it!</h2><div class="stars">${[0,1,2].map(i=>starSVG(i<stars)).join("")}</div>
+    <button class="btn next" id="nextBtn">${last?"Play again":"Next level"}</button></div>`;
+  $("board").appendChild(w);
+  msg(last?"Yum! You finished every level. Amazing coding!":"Yum! Robo got the apple. Great coding!");
+  const nb=$("nextBtn");nb.focus();
+  nb.onclick=()=>{sfx.tap();loadLevel(last?0:S.level+1);};
+}
+
+/* ---------- input ---------- */
+function press(d){
+  if(S.mode==="tap"){tapMove(d);return;}
+  if(S.running||S.won||S.program.length>=MAX)return;
+  S.program.push(d);sfx.tap();renderStrip();
+  if(S.program.length===MAX)msg("The plan is full. Press Go!",false);
+}
+$("pad").addEventListener("click",e=>{const b=e.target.closest(".arrow");if(b)press(b.dataset.d);});
+$("go").onclick=run;
+$("undo").onclick=()=>{S.program.pop();sfx.soft();renderStrip();};
+$("clear").onclick=()=>{S.program=[];sfx.soft();renderStrip();};
+$("levels").addEventListener("click",e=>{const b=e.target.closest(".lv");if(b&&!S.running){sfx.tap();loadLevel(+b.dataset.i);}});
+function setSound(v){S.sound=v;$("sound").setAttribute("aria-pressed",v);$("tSound").setAttribute("aria-pressed",v);}
+$("sound").onclick=()=>setSound(!S.sound);
+$("tSound").onclick=()=>setSound(!S.sound);
+$("tDots").onclick=()=>{S.dots=!S.dots;$("tDots").setAttribute("aria-pressed",S.dots);if(!S.running){const p=S.pos;renderBoard();if(!S.won&&S.mode==="tap"){S.pos=p;place(robotEl,p);}}};
+$("modeSeg").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;S.mode=b.dataset.m;renderMode();loadLevel(S.level,false);});
+$("resetStars").onclick=()=>{S.done={};renderLevels();};
+$("teacher").onclick=()=>{$("drawer").hidden=false;$("closeT").focus();};
+$("closeT").onclick=()=>{$("drawer").hidden=true;$("teacher").focus();};
+$("drawer").addEventListener("click",e=>{if(e.target.id==="drawer")$("drawer").hidden=true;});
+document.addEventListener("keydown",e=>{
+  if(!$("drawer").hidden){if(e.key==="Escape")$("drawer").hidden=true;return;}
+  const map={ArrowUp:"up",ArrowDown:"down",ArrowLeft:"left",ArrowRight:"right"};
+  if(map[e.key]){e.preventDefault();press(map[e.key]);}
+  else if(e.key==="Enter"&&S.mode==="plan"&&!S.won&&document.activeElement.tagName!=="BUTTON"){e.preventDefault();run();}
+  else if(e.key==="Backspace"&&S.mode==="plan"&&!S.running&&!S.won){e.preventDefault();S.program.pop();renderStrip();}
+});
+document.querySelectorAll(".arrow").forEach(b=>b.innerHTML=arrowSVG(b.dataset.d));
+
+/* ---------- boot (keeps level + stars if the page updates while open) ---------- */
+function start(data){
+  data=data||{};
+  if(data.done)S.done=data.done;
+  if(data.mode)S.mode=data.mode;
+  if(typeof data.dots==="boolean")S.dots=data.dots;
+  if(typeof data.voice==="boolean")S.voice=data.voice;
+  if(typeof data.sound==="boolean")S.sound=data.sound;
+  $("tDots").setAttribute("aria-pressed",S.dots);setSound(S.sound);
+  renderMode();loadLevel(data.level||0,false);
+  try{window.claude?.hot?.snapshot?.(()=>({level:S.level,done:S.done,mode:S.mode,dots:S.dots,voice:S.voice,sound:S.sound}));}catch(e){}
+}
+window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
+})();
+</script>
+
+</body></html>
