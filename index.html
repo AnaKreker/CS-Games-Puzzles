@@ -1,1 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ms. Ana's CS Games</title>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --turquoise: #2EC4B6;
+      --blue: #4D96FF;
+      --orange: #FF9F1C;
+      --purple: #8E44AD;
+      --yellow: #FFD23F;
+      --navy: #2B2D42;
+      --cream: #FFFDF7;
+      --pink: #F7A8B8;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--cream);
+      font-family: Arial, sans-serif;
+      color: var(--navy);
+    }
+    header {
+      text-align: center;
+      padding: 28px 16px 8px;
+    }
+    h1 {
+      font-family: 'Fredoka', sans-serif;
+      font-size: 2.6rem;
+      margin: 0;
+      display: inline-block;
+      padding: 10px 28px;
+      border: 4px dashed var(--turquoise);
+      border-radius: 24px;
+    }
+    header p {
+      font-family: 'Fredoka', sans-serif;
+      color: var(--purple);
+      font-size: 1.3rem;
+      margin: 12px 0 0;
+    }
+    main {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 8px 16px 40px;
+    }
+    h2 {
+      font-family: 'Fredoka', sans-serif;
+      font-size: 1.7rem;
+      margin: 28px 0 12px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 16px;
+    }
+    .card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 150px;
+      padding: 16px;
+      border-radius: 22px;
+      border: 4px solid #fff;
+      box-shadow: inset 0 0 0 3px rgba(255,255,255,0.45), 0 4px 0 rgba(0,0,0,0.08);
+      color: #fff;
+      text-decoration: none;
+      font-family: 'Fredoka', sans-serif;
+      font-size: 1.3rem;
+      text-align: center;
+      transition: transform 0.15s;
+    }
+    .card:hover, .card:focus { transform: translateY(-4px) scale(1.03); }
+    .card .icon { font-size: 3rem; line-height: 1; }
+    .turquoise { background: var(--turquoise); }
+    .blue      { background: var(--blue); }
+    .orange    { background: var(--orange); }
+    .purple    { background: var(--purple); }
+    footer {
+      text-align: center;
+      padding: 16px;
+      font-size: 0.9rem;
+      color: var(--purple);
+    }
+  </style>
+</head>
+<body>
 
+  <header>
+    <h1>⭐ Ms. Ana's CS Games ⭐</h1>
+    <p>Pick a game and have fun!</p>
+  </header>
+
+  <main id="games"></main>
+
+  <footer>Jefferson Elementary · Computer Science</footer>
+
+  <script>
+    // ✏️ To add a game: copy a line and change the title, file, and icon.
+    // "file" must match the game's file name in your repository.
+    const sections = [
+      {
+        title: "🔤 Alphabet Games",
+        color: "turquoise",
+        games: [
+          { title: "Alphabet Puzzle", file: "alphabet-puzzle.html", icon: "🧩" },
+          { title: "Alphabet Match",  file: "alphabet-match.html",  icon: "🔠" },
+          { title: "Alphabet Jigsaw", file: "alphabet-jigsaw.html", icon: "🅰️" }
+        ]
+      },
+      {
+        title: "🦁 Animal Jigsaws",
+        color: "orange",
+        games: [
+          { title: "Monkey",    file: "monkey-jigsaw.html",    icon: "🐒" },
+          { title: "Lion Cub",  file: "lion-cub-jigsaw.html",  icon: "🦁" },
+          { title: "Lemur",     file: "lemur-jigsaw.html",     icon: "🐾" },
+          { title: "Orangutan", file: "orangutan-jigsaw.html", icon: "🦧" },
+          { title: "Giraffe",   file: "giraffe-jigsaw.html",   icon: "🦒" },
+          { title: "Zebra",     file: "zebra-jigsaw.html",     icon: "🦓" },
+          { title: "Elephant",  file: "elephant-jigsaw.html",  icon: "🐘" },
+          { title: "Kangaroo",  file: "kangaroo-jigsaw.html",  icon: "🦘" }
+        ]
+      },
+      {
+        title: "🤖 Coding & Routines",
+        color: "blue",
+        games: [
+          { title: "Robot to the Snack",  file: "robot-to-the-snack.html",  icon: "🤖" },
+          { title: "Daily Routine Order", file: "daily-routine-order.html", icon: "⏰" }
+        ]
+      }
+    ];
+
+    const main = document.getElementById("games");
+    sections.forEach(section => {
+      const h2 = document.createElement("h2");
+      h2.textContent = section.title;
+      main.appendChild(h2);
+
+      const grid = document.createElement("div");
+      grid.className = "grid";
+      section.games.forEach(game => {
+        const a = document.createElement("a");
+        a.className = "card " + section.color;
+        a.href = game.file;
+        a.innerHTML = `<span class="icon">${game.icon}</span>${game.title}`;
+        grid.appendChild(a);
+      });
+      main.appendChild(grid);
+    });
+  </script>
+
+</body>
+</html>
