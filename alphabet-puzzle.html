@@ -15,17 +15,17 @@
 /* Layout: one-screen app. Toolbar row, then [tray | poster | tray] sized to the window height (fits a Chromebook); stacks on phones */
 :root{
   --mat:#F5E6CC; --mat-line:#E9D3AE; --ink:#2B2D42; --ink-soft:#6B5B45;
-  --chip:#FFFFFF; --accent:#FF9F1C; --accent-ink:#2B2D42; --tray:#E6CFA7; --btn-ink:#CC5500; --btn-text:#4A2810;
+  --chip:#FFFFFF; --accent:#FF9F1C; --accent-ink:#2B2D42; --tray:#E6CFA7; --tool:#2B2D42; --tool-ink:#FFFFFF; --tool-shadow:#000000;
   --good:#3DB86A;
   --display:"Fredoka","Trebuchet MS","Arial Rounded MT Bold",system-ui,sans-serif;
   --body:Arial,Helvetica,sans-serif;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --mat:#2E2620; --mat-line:#3A3028; --ink:#F6EBD9; --ink-soft:#CDB896;
-  --chip:#3E342B; --accent:#FFB347; --tray:#3A3029; --btn-ink:#FF8C42; --btn-text:#F3D3AE; color-scheme:dark}}
+  --chip:#3E342B; --accent:#FFB347; --tray:#3A3029; --tool:#F6EBD9; --tool-ink:#2B2D42; --tool-shadow:#A8957A; color-scheme:dark}}
 :root[data-theme="dark"]{
   --mat:#2E2620; --mat-line:#3A3028; --ink:#F6EBD9; --ink-soft:#CDB896;
-  --chip:#3E342B; --accent:#FFB347; --tray:#3A3029; --btn-ink:#FF8C42; --btn-text:#F3D3AE; color-scheme:dark}
+  --chip:#3E342B; --accent:#FFB347; --tray:#3A3029; --tool:#F6EBD9; --tool-ink:#2B2D42; --tool-shadow:#A8957A; color-scheme:dark}
 body{background:var(--mat);color:var(--ink);font-family:var(--body);
   background-image:repeating-linear-gradient(178deg,transparent 0 34px,var(--mat-line) 34px 37px,transparent 37px 71px);background-attachment:fixed;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:10px;box-sizing:border-box;margin:0}
@@ -37,11 +37,11 @@ header{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-betw
 h1{font-family:var(--display);font-weight:700;font-size:clamp(22px,2.6vw,30px);margin:0;text-wrap:balance}
 .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .count{font-family:var(--display);font-weight:500;font-size:18px;color:var(--ink-soft);font-variant-numeric:tabular-nums}
-button{font-family:var(--display);font-weight:600;font-size:16px;border:3px solid var(--btn-ink);border-radius:999px;
-  padding:6px 14px;background:var(--chip);color:var(--btn-text);cursor:pointer;box-shadow:0 3px 0 var(--btn-ink);touch-action:manipulation}
-button:active{transform:translateY(2px);box-shadow:0 1px 0 var(--btn-ink)}
+button{font-family:var(--display);font-weight:600;font-size:16px;border:3px solid var(--ink);border-radius:999px;
+  padding:7px 15px;background:var(--chip);color:var(--ink);cursor:pointer;box-shadow:0 3px 0 var(--ink);touch-action:manipulation}
+button:active{transform:translateY(2px);box-shadow:0 1px 0 var(--ink)}
 button:focus-visible,.piece:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
-button[aria-pressed="true"]{background:var(--accent);color:#4A2810}
+button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
 .poster{position:relative;flex:none;box-sizing:border-box;aspect-ratio:1/1;max-width:100%;overflow:hidden;border:none;background:transparent}
 .poster .title{position:absolute;left:0;top:0;width:100%;height:auto;pointer-events:none;overflow:visible}
 .poster>img.base{position:absolute;inset:0;width:100%;height:100%;display:block;user-select:none;pointer-events:none}
@@ -70,19 +70,42 @@ button[aria-pressed="true"]{background:var(--accent);color:#4A2810}
 .conf{position:absolute;width:14px;height:8px;top:-20px;border-radius:2px;animation:fall linear forwards}
 @keyframes fall{to{transform:translateY(110vh) rotate(720deg)}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* Home button: same bold look in every game */
+.brand{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.home{display:inline-flex;align-items:center;gap:8px;font-family:var(--display);font-weight:700;font-size:19px;line-height:1;
+  text-decoration:none;color:#2B2D42;background:#36CEDC;border:3px solid #2B2D42;border-radius:999px;padding:9px 18px 9px 14px;
+  box-shadow:0 4px 0 #2B2D42;touch-action:manipulation}
+.home:hover{background:#5ADAE5}
+.home:active{transform:translateY(3px);box-shadow:0 1px 0 #2B2D42}
+.home:focus-visible{outline:3px solid #FF9F1C;outline-offset:3px}
+
+/* Tool buttons sit apart from the game modes and look different from them */
+.tools{display:flex;align-items:center;gap:10px;margin-left:auto}
+.tool{display:inline-flex;align-items:center;gap:7px;border-radius:14px}
+.tool.restart{background:var(--tool);color:var(--tool-ink);border-color:var(--tool);box-shadow:0 3px 0 var(--tool-shadow)}
+.tool.restart:active{box-shadow:0 1px 0 var(--tool-shadow)}
+.tool.snd{width:46px;height:46px;padding:0;justify-content:center;border-radius:50%;background:#FFEA56;color:#2B2D42;border-color:#2B2D42;box-shadow:0 3px 0 #2B2D42}
+.tool.snd[aria-pressed="true"]{background:#FFEA56;color:#2B2D42}
+.tool.snd[aria-pressed="false"]{background:var(--chip);color:var(--ink-soft)}
+.tool.snd .mute{display:none}
+.tool.snd[aria-pressed="false"] .wave{display:none}
+.tool.snd[aria-pressed="false"] .mute{display:inline}
 </style>
 
 <main>
   <header>
-    <h1>Alphabet Puzzle</h1>
+    <div class="brand"><a class="home" href="index.html" aria-label="Back to all games"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M3 11.2 12 3.5l9 7.7" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 10v9.5h4.6v-5.6h3.8v5.6h4.6V10" fill="currentColor"/></svg><span>Home</span></a><h1>Alphabet Puzzle</h1></div>
     <div class="row" role="group" aria-label="Game">
       <button type="button" data-mode="kid" aria-pressed="true">Color match letters</button>
       <button type="button" data-mode="letter" aria-pressed="false">Letters</button>
       <button type="button" data-mode="pic" aria-pressed="false">Pictures</button>
-      <button type="button" id="shuffle">Start over</button>
-      <button type="button" id="sound" aria-pressed="true">Sound on</button>
     </div>
-    <span class="count" id="count" aria-live="polite">0 of 26 placed</span>
+    <div class="tools">
+      <span class="count" id="count" aria-live="polite">0 of 26 placed</span>
+      <button type="button" class="tool restart" id="shuffle"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.6-5.9" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path d="M20.5 3.5v5h-5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>Start over</button>
+      <button type="button" class="tool snd" id="sound" aria-pressed="true" aria-label="Sound on"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" fill="currentColor"/><path class="wave" d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><path class="mute" d="M16 9.5l5 5M21 9.5l-5 5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg></button>
+    </div>
   </header>
   <div class="play" id="play">
   <div class="tray" id="trayL" aria-label="Pieces to drag"></div>
@@ -185,7 +208,7 @@ function win(){
 document.querySelectorAll('[data-mode]').forEach(b=>b.addEventListener('click',()=>{mode=b.dataset.mode;
   document.querySelectorAll('[data-mode]').forEach(x=>x.setAttribute('aria-pressed',x===b));setup();}));
 $('#shuffle').onclick=setup; $('#again').onclick=setup;
-$('#sound').onclick=()=>{sound=!sound;$('#sound').setAttribute('aria-pressed',sound);$('#sound').textContent=sound?'Sound on':'Sound off';};
+$('#sound').onclick=()=>{sound=!sound;const b=$('#sound');b.setAttribute('aria-pressed',sound);b.setAttribute('aria-label',sound?'Sound on':'Sound off');b.title=sound?'Sound on':'Sound off';if(!sound)try{speechSynthesis.cancel()}catch(_){}};
 addEventListener('resize',layout);
 setup();
 </script>
