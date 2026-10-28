@@ -345,8 +345,21 @@ const WORLDS=[
 ];
 const LEVELS=WORLDS.flatMap((W,w)=>W.boards.map((b,i)=>({r:b.r,a:b.a,rocks:b.o,w,n:i+1})));
 
-const $=id=>document.getElementById(id);
-const S={level:0,program:[],running:false,done:{},mode:"plan",dots:false,voice:true,sound:true,pos:null,won:false};
+/* Long Home Button: kids must hold it 1.2 seconds, so a quick tap can't leave the game */
+(function(){
+  const h=$("home"),HOLD=1200;let t=null;
+  h.style.setProperty("--hold",HOLD+"ms");
+  const start=e=>{if(e.button>0)return;e.preventDefault();clearTimeout(t);h.classList.add("holding");
+    $("msg").textContent="Keep holding to go Home…";t=setTimeout(()=>{location.href=h.href;},HOLD);};
+  const stop=()=>{if(!h.classList.contains("holding"))return;clearTimeout(t);h.classList.remove("holding");};
+  h.addEventListener("pointerdown",start);
+  ["pointerup","pointerleave","pointercancel"].forEach(ev=>h.addEventListener(ev,stop));
+  h.addEventListener("click",e=>{e.preventDefault();if(!h.classList.contains("holding")){h.classList.remove("nudge");void h.offsetWidth;h.classList.add("nudge");$("msg").textContent="Press and hold Home to leave the game.";}});
+  h.addEventListener("contextmenu",e=>e.preventDefault());
+  h.addEventListener("keydown",e=>{if((e.key==="Enter"||e.key===" ")&&!e.repeat){e.stopPropagation();start(e);}});
+  h.addEventListener("keyup",e=>{if(e.key==="Enter"||e.key===" ")stop();});
+})();
+   const S={level:0,program:[],running:false,done:{},mode:"plan",dots:false,voice:true,sound:true,pos:null,won:false};
 let robotEl,appleEl,obsEls={};
 
 /* ---------- sound + voice ---------- */
