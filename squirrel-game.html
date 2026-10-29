@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Help the Squirrel!</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --grass1:#9fd67a; --grass2:#8bcb66; --line:#5f9e3e;
+    --panel:#fff8ec; --ink:#3b2a1a; --accent:#ff8a3d;
+    --skin:#d2a06d;
+    --up:#4aa8ff; --down:#a77bff; --left:#ffb020; --right:#ff5d8f;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family:'Baloo 2', system-ui, sans-serif; color:var(--ink);
+    background:linear-gradient(#bfe7ff,#e6f6ff);
+    display:flex; gap:2vh; padding:2vh; height:100vh; overflow:hidden;
+  }
+  /* ---------- board ---------- */
+  .stage{flex:1; display:flex; align-items:center; justify-content:center; min-width:0}
+  .board{
+    position:relative;
+    width:min(96vh, calc(100vw - 34vw - 6vh)); aspect-ratio:1;
+    border-radius:24px; overflow:hidden;
+    box-shadow:0 10px 0 #4f8a32, 0 14px 30px rgba(0,0,0,.2);
+    display:grid; grid-template-columns:repeat(3,1fr); grid-template-rows:repeat(3,1fr);
+    border:6px solid var(--line);
+  }
+  .cell{border:3px solid var(--line); background:var(--grass1)}
+  .cell:nth-child(odd){background:var(--grass2)}
+  .piece{
+    position:absolute; top:0; left:0; width:33.333%; height:33.333%;
+    display:flex; align-items:center; justify-content:center;
+    transition:transform .45s cubic-bezier(.5,1.6,.5,1);
+    pointer-events:none;
+  }
+  .piece svg{width:78%; height:78%; overflow:visible}
+  #squirrel{z-index:2}
+  #squirrel .flip{transition:transform .25s; transform-origin:center}
+  #squirrel.facing-left .flip{transform:scaleX(-1)}
+  #acorn svg{width:52%; height:52%; animation:bob 1.4s ease-in-out infinite}
+  @keyframes bob{50%{transform:translateY(-8%) rotate(6deg)}}
+  .bump{animation:bump .4s}
+  @keyframes bump{20%{translate:-6% 0}40%{translate:6% 0}60%{translate:-4% 0}80%{translate:3% 0}}
+  .hop svg{animation:hop .45s}
+  @keyframes hop{40%{transform:translateY(-14%)}}
+
+  .banner{
+    position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    background:rgba(255,255,255,.55); z-index:5; opacity:0; pointer-events:none; transition:opacity .3s;
+  }
+  .banner.show{opacity:1; pointer-events:auto}
+  .banner h1{font-size:min(14vh,9vw); color:var(--accent); text-shadow:0 5px 0 #fff, 0 8px 0 rgba(0,0,0,.12); animation:pop .6s}
+  .banner button{margin-top:2vh}
+  @keyframes pop{0%{transform:scale(.3)}70%{transform:scale(1.15)}100%{transform:scale(1)}}
+  .oops{
+    position:absolute; left:50%; top:6%; translate:-50% 0; z-index:4;
+    background:#fff; padding:.4em 1em; border-radius:999px; font-size:min(5vh,3vw); font-weight:800;
+    color:#e2533b; box-shadow:0 4px 0 rgba(0,0,0,.15); opacity:0; transition:opacity .2s;
+  }
+  .oops.show{opacity:1}
+  .confetti{position:absolute; width:12px; height:18px; top:-20px; z-index:6; border-radius:3px; animation:fall linear forwards}
+  @keyframes fall{to{transform:translateY(110vh) rotate(720deg)}}
+
+  /* ---------- panel ---------- */
+  .panel{
+    width:32vw; max-width:520px; min-width:260px;
+    display:flex; flex-direction:column; gap:1.4vh;
+  }
+  .signs{flex:1; display:grid; grid-template-rows:repeat(4,1fr); gap:1.4vh; min-height:0}
+  .sign{
+    display:flex; align-items:center; justify-content:center; gap:8%; padding:0 6%;
+    background:var(--panel); border:5px solid var(--c); border-radius:22px;
+    box-shadow:0 7px 0 var(--c); cursor:pointer; font:inherit; color:inherit;
+    transition:transform .08s, box-shadow .08s; min-height:0;
+  }
+  .sign:active,.sign.pressed{transform:translateY(6px); box-shadow:0 1px 0 var(--c)}
+  .sign .fig{height:82%; aspect-ratio:1; flex:none}
+  .sign .fig svg{width:100%; height:100%}
+  .sign .label{flex:none; min-width:30%; display:flex; flex-direction:column; align-items:center; line-height:1}
+  .sign .arrow{font-size:min(9vh,5vw); color:var(--c); font-weight:800}
+  .sign .word{font-size:min(4vh,2.4vw); font-weight:800}
+  .s-up{--c:var(--up)} .s-down{--c:var(--down)} .s-left{--c:var(--left)} .s-right{--c:var(--right)}
+
+  .trail{
+    background:#fff; border-radius:16px; padding:.6vh .8vw; min-height:7vh;
+    display:flex; flex-wrap:wrap; align-items:center; gap:.5vh .4vw; font-size:min(3.4vh,2vw);
+    box-shadow:inset 0 2px 6px rgba(0,0,0,.08);
+  }
+  .trail .hint{opacity:.45; font-size:.8em}
+  .chip{color:#fff; border-radius:8px; padding:0 .45em; font-weight:800; line-height:1.4}
+  .tools{display:flex; gap:.6vw}
+  .tool{
+    flex:1; font:inherit; font-weight:800; font-size:min(2.8vh,1.6vw); padding:.5vh 0;
+    border:none; border-radius:12px; background:#fff; color:var(--ink); cursor:pointer;
+    box-shadow:0 4px 0 rgba(0,0,0,.15);
+  }
+  .tool:active{transform:translateY(3px); box-shadow:0 1px 0 rgba(0,0,0,.15)}
+  .big{font-size:min(4vh,2.6vw); padding:.4em 1.4em; background:var(--accent); color:#fff; box-shadow:0 6px 0 #c9621f; flex:none}
+  .score{font-size:min(3.2vh,2vw); font-weight:800; text-align:center}
+</style>
+</head>
+<body>
+
+<div class="stage">
+  <div class="board" id="board">
+    <div class="cell"></div><div class="cell"></div><div class="cell"></div>
+    <div class="cell"></div><div class="cell"></div><div class="cell"></div>
+    <div class="cell"></div><div class="cell"></div><div class="cell"></div>
+
+    <div class="piece" id="acorn">
+      <svg viewBox="0 0 100 110">
+        <path d="M50 8 q2 -8 9 -6" stroke="#6b4423" stroke-width="5" fill="none" stroke-linecap="round"/>
+        <path d="M18 64 Q18 100 50 106 Q82 100 82 64 Z" fill="#c8813f"/>
+        <path d="M30 70 Q30 92 46 98" stroke="#e6a565" stroke-width="5" fill="none" stroke-linecap="round"/>
+        <path d="M10 62 Q10 22 50 18 Q90 22 90 62 Q50 72 10 62 Z" fill="#7a4b26"/>
+        <path d="M22 40 h56 M16 52 h68 M34 28 h32" stroke="#5e3819" stroke-width="3" stroke-linecap="round"/>
+      </svg>
+    </div>
+
+    <div class="piece" id="squirrel">
+      <svg viewBox="0 0 120 120"><g class="flip">
+        <!-- tail -->
+        <path d="M44 92 C10 96 2 60 18 36 C30 18 52 22 50 42 C48 56 34 54 36 44" fill="#c97a3a" stroke="#8a4f22" stroke-width="3"/>
+        <path d="M26 72 C18 58 22 40 32 34" stroke="#e9a868" stroke-width="5" fill="none" stroke-linecap="round"/>
+        <!-- body -->
+        <ellipse cx="68" cy="84" rx="24" ry="22" fill="#d98c47" stroke="#8a4f22" stroke-width="3"/>
+        <ellipse cx="74" cy="88" rx="12" ry="13" fill="#f6d3a6"/>
+        <!-- feet -->
+        <ellipse cx="58" cy="105" rx="9" ry="5" fill="#b56a2e"/>
+        <ellipse cx="82" cy="105" rx="9" ry="5" fill="#b56a2e"/>
+        <!-- head -->
+        <path d="M66 30 L70 12 L80 28 Z" fill="#d98c47" stroke="#8a4f22" stroke-width="3" stroke-linejoin="round"/>
+        <circle cx="78" cy="48" r="22" fill="#d98c47" stroke="#8a4f22" stroke-width="3"/>
+        <path d="M86 30 L94 14 L98 34 Z" fill="#d98c47" stroke="#8a4f22" stroke-width="3" stroke-linejoin="round"/>
+        <ellipse cx="88" cy="56" rx="12" ry="9" fill="#f6d3a6"/>
+        <circle cx="84" cy="44" r="5" fill="#2a1a0e"/><circle cx="86" cy="42" r="1.8" fill="#fff"/>
+        <circle cx="98" cy="52" r="3.5" fill="#4a2a14"/>
+        <circle cx="76" cy="56" r="4" fill="#ff9a8a" opacity=".6"/>
+        <path d="M90 60 q4 3 8 0" stroke="#4a2a14" stroke-width="2" fill="none" stroke-linecap="round"/>
+        <!-- paws -->
+        <ellipse cx="86" cy="76" rx="6" ry="4" fill="#b56a2e"/>
+      </g></svg>
+    </div>
+
+    <div class="oops" id="oops">Oops! Bump! 🌳</div>
+    <div class="banner" id="banner">
+      <h1>ACORN! 🎉</h1>
+      <button class="tool big" id="nextBtn">Next acorn ▶</button>
+    </div>
+  </div>
+</div>
+
+<div class="panel">
+  <div class="signs">
+    <!-- UP: both index fingers pointing up -->
+    <button class="sign s-up" data-dir="up" aria-label="Up">
+      <div class="fig"><svg viewBox="-8 -2 136 136">
+        <g stroke="#3b2a1a" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" fill="none">
+          <path d="M42 66 L26 96 L26 58"/><path d="M78 66 L94 96 L94 58"/>
+        </g>
+        <path d="M26 58 L26 44 M94 58 L94 44" stroke="#3b2a1a" stroke-width="5" stroke-linecap="round"/>
+        <circle cx="26" cy="60" r="7" fill="var(--skin)" stroke="#3b2a1a" stroke-width="3"/>
+        <circle cx="94" cy="60" r="7" fill="var(--skin)" stroke="#3b2a1a" stroke-width="3"/>
+        <path d="M40 62 Q60 54 80 62 L84 128 L36 128 Z" fill="var(--up)" stroke="#3b2a1a" stroke-width="3"/>
+        <circle cx="60" cy="38" r="17" fill="var(--skin)" stroke="#3b2a1a" stroke-width="3"/>
+      </svg></div>
+      <div class="label"><span class="arrow">⬆</span><span class="word">UP</span></div>
+    </button>
+
+    <!-- DOWN: both index fingers pointing down -->
+    <button class="sign s-down" data-dir="down" aria-label="Down">
+      <div class="fig"><svg viewBox="-8 -2 136 136">
+        <g stroke="#3b2a1a" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" fill="none">
+          <path d="M42 66 L20 78 L24 98"/><path d="M78 66 L100 78 L96 98"/>
+        </g>
+        <path d="M24 98 L24 111 M96 98 L96 111" stroke="#3b2a1a" stroke-width="5" stroke-linecap="round"/>
+        <circle cx="24" cy="98" r="7" fill="var(--skin)" stroke="#3b2a1a" stroke-width="3"/>
+        <circle cx="96" cy="98" r="7" fill="var(--skin)" stroke="#3b2a1a" stroke-width="3"/>
+        <path d="M40 62 Q60 54 80 62 L84 128 L36 128 Z" fill="var(--down)" stroke="#3b2a1a" stroke-width="3"/>
+        <circle cx="60" cy="38" r="17" fill="var(--skin)" stroke="#3b2a1a" stroke-width="3"/>
+      </svg></div>
+      <div class="label"><span class="arrow">⬇</span><span class="word">DOWN</span></div>
+    </button>
+
+    <!-- LEFT: bicycle signal, left arm straight out -->
+    <button class="sign s-left" data-dir="left" aria-label="Left">
+      <div class="fig"><svg viewBox="-8 -2 136 136">
+        <path d="M42 66 L16 66 L16 30" stroke="#3b2a1a" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        <path d="M78 66 L86 110" stroke="#3b2a1a" stroke-width="7" stroke-linecap="round"/>
+        <circle cx="16" cy="26" r="7" fill="var(--skin)" stroke="#3b2a1a" stroke-width="3"/>
+        <path d="M40 62 Q60 54 80 62 L84 128 L36 128 Z" fill="var(--left)" stroke="#3b2a1a" stroke-width="3"/>
+        <circle cx="60" cy="38" r="17" fill="var(--skin)" stroke="#3b2a1a" stroke-width="3"/>
+      </svg></div>
+      <div class="label"><span class="arrow">⬅</span><span class="word">LEFT</span></div>
+    </button>
+
+    <!-- RIGHT: bicycle signal, left arm out and bent up -->
+    <button class="sign s-right" data-dir="right" aria-label="Right">
+      <div class="fig"><svg viewBox="-8 -2 136 136">
+        <path d="M78 66 L104 66 L104 30" stroke="#3b2a1a" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        <path d="M42 66 L34 110" stroke="#3b2a1a" stroke-width="7" stroke-linecap="round"/>
+        <circle cx="104" cy="26" r="7" fill="var(--skin)" stroke="#3b2a1a" stroke-width="3"/>
+        <path d="M40 62 Q60 54 80 62 L84 128 L36 128 Z" fill="var(--right)" stroke="#3b2a1a" stroke-width="3"/>
+        <circle cx="60" cy="38" r="17" fill="var(--skin)" stroke="#3b2a1a" stroke-width="3"/>
+      </svg></div>
+      <div class="label"><span class="arrow">➡</span><span class="word">RIGHT</span></div>
+    </button>
+  </div>
+
+  <div class="trail" id="trail"><span class="hint">Our code: …</span></div>
+  <div class="score" id="score">🌰 Acorns: 0</div>
+  <div class="tools">
+    <button class="tool" id="restartBtn">↺ Start over</button>
+    <button class="tool" id="newBtn">🌰 New</button>
+    <button class="tool" id="fsBtn">⛶ Full screen</button>
+  </div>
+</div>
+
+<script>
+const squirrel = document.getElementById('squirrel');
+const acorn = document.getElementById('acorn');
+const banner = document.getElementById('banner');
+const oops = document.getElementById('oops');
+const trail = document.getElementById('trail');
+const scoreEl = document.getElementById('score');
+
+const DIRS = {
+  up:{dr:-1,dc:0,ch:'⬆',col:'var(--up)'},
+  down:{dr:1,dc:0,ch:'⬇',col:'var(--down)'},
+  left:{dr:0,dc:-1,ch:'⬅',col:'var(--left)'},
+  right:{dr:0,dc:1,ch:'➡',col:'var(--right)'}
+};
+let pos = {r:2,c:0}, start = {r:2,c:0}, goal = {r:0,c:2}, score = 0, won = false;
+
+function place(el,p){ el.style.transform = `translate(${p.c*100}%, ${p.r*100}%)`; }
+
+let audio;
+function beep(freq, dur=0.12, type='sine'){
+  try{
+    audio = audio || new (window.AudioContext||window.webkitAudioContext)();
+    const o = audio.createOscillator(), g = audio.createGain();
+    o.type = type; o.frequency.value = freq;
+    g.gain.setValueAtTime(.18, audio.currentTime);
+    g.gain.exponentialRampToValueAtTime(.001, audio.currentTime+dur);
+    o.connect(g); g.connect(audio.destination); o.start(); o.stop(audio.currentTime+dur);
+  }catch(e){}
+}
+
+function addChip(dir){
+  const h = trail.querySelector('.hint'); if(h) h.remove();
+  const s = document.createElement('span');
+  s.className='chip'; s.textContent = DIRS[dir].ch; s.style.background = DIRS[dir].col;
+  trail.appendChild(s);
+}
+function clearTrail(){ trail.innerHTML = '<span class="hint">Our code: …</span>'; }
+
+function move(dir){
+  if(won) return;
+  const d = DIRS[dir];
+  addChip(dir);
+  if(dir==='left') squirrel.classList.add('facing-left');
+  if(dir==='right') squirrel.classList.remove('facing-left');
+  const n = {r:pos.r+d.dr, c:pos.c+d.dc};
+  if(n.r<0||n.r>2||n.c<0||n.c>2){
+    squirrel.classList.remove('bump'); void squirrel.offsetWidth; squirrel.classList.add('bump');
+    oops.classList.add('show'); setTimeout(()=>oops.classList.remove('show'),1100);
+    beep(140,.25,'square');
+    return;
+  }
+  pos = n; place(squirrel,pos);
+  squirrel.classList.remove('hop'); void squirrel.offsetWidth; squirrel.classList.add('hop');
+  beep(520 + Math.random()*120);
+  if(pos.r===goal.r && pos.c===goal.c) setTimeout(win, 450);
+}
+
+function win(){
+  won = true; score++; scoreEl.textContent = `🌰 Acorns: ${score}`;
+  acorn.style.opacity = 0;
+  banner.classList.add('show');
+  [523,659,784,1047].forEach((f,i)=>setTimeout(()=>beep(f,.18,'triangle'), i*120));
+  const colors=['#ff5d8f','#ffb020','#4aa8ff','#a77bff','#7ad151','#ff8a3d'];
+  for(let i=0;i<60;i++){
+    const c=document.createElement('div'); c.className='confetti';
+    c.style.left=Math.random()*100+'vw'; c.style.background=colors[i%colors.length];
+    c.style.animationDuration=(1.6+Math.random()*1.6)+'s'; c.style.animationDelay=(Math.random()*.4)+'s';
+    document.body.appendChild(c); setTimeout(()=>c.remove(),3800);
+  }
+}
+
+function newRound(){
+  won = false; banner.classList.remove('show'); clearTrail();
+  start = {...pos};
+  let g;
+  do{ g = {r:Math.floor(Math.random()*3), c:Math.floor(Math.random()*3)}; }
+  while(g.r===pos.r && g.c===pos.c);
+  goal = g; place(acorn,goal); acorn.style.opacity = 1;
+}
+
+function restart(){
+  won = false; banner.classList.remove('show'); clearTrail();
+  pos = {...start}; place(squirrel,pos); acorn.style.opacity = 1;
+}
+
+document.querySelectorAll('.sign').forEach(b=>{
+  b.addEventListener('click',()=>move(b.dataset.dir));
+});
+document.getElementById('nextBtn').onclick = newRound;
+document.getElementById('newBtn').onclick = newRound;
+document.getElementById('restartBtn').onclick = restart;
+document.getElementById('fsBtn').onclick = ()=>{
+  try{
+    if(document.fullscreenElement) document.exitFullscreen();
+    else document.documentElement.requestFullscreen().catch(()=>{});
+  }catch(e){}
+};
+document.addEventListener('keydown',e=>{
+  const map={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right'};
+  if(map[e.key]){
+    e.preventDefault();
+    const btn=document.querySelector(`.sign[data-dir="${map[e.key]}"]`);
+    btn.classList.add('pressed'); setTimeout(()=>btn.classList.remove('pressed'),120);
+    move(map[e.key]);
+  }
+  if((e.key===' '||e.key==='Enter') && won){ e.preventDefault(); newRound(); }
+});
+
+place(squirrel,pos); place(acorn,goal);
+</script>
+</body>
+</html>
