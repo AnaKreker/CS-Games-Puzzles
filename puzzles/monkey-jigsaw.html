@@ -65,6 +65,7 @@ button:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
 .whole{position:absolute;z-index:3;pointer-events:none;border-radius:6px;opacity:0;transition:opacity .7s ease;background-image:var(--photo);background-repeat:no-repeat}
 .play.done .whole{opacity:1}
 .play.done .clip svg{opacity:0}
+.play .fact.in-tray{position:absolute;z-index:5;margin:0;max-width:none;overflow:auto;display:flex;flex-direction:column;justify-content:center;font-size:clamp(17px,2.2vw,22px)}
 .fact{margin:16px 0 0;padding:14px 18px;border-radius:12px;background:var(--fact-bg);border:2px solid var(--fact-line);max-width:60ch;font-size:20px;line-height:1.45}
 #hint{background:var(--hint-bg);border-color:var(--hint-line)}
 #again{background:var(--again-bg);border-color:var(--again-line)}
@@ -175,7 +176,7 @@ function piecePath(r,c,rows,cols){
 function sign(){ return Math.random()<.5?1:-1; }
 
 function setup(){
-  play.innerHTML=''; play.classList.remove('done'); fact.hidden=true;
+  play.innerHTML=''; play.classList.remove('done'); fact.hidden=true; fact.classList.remove('in-tray'); fact.removeAttribute('style'); play.parentNode.insertBefore(fact,play.nextSibling);
   drag=null; placed=0; pieces=[];
   W=Math.floor(play.clientWidth)||320; lastW=W;
   var lv=LEVELS[level], cols=lv[0], rows=lv[1];
@@ -206,6 +207,7 @@ function setup(){
   }
   H=side?(TOP*2+Math.max(Bh,th)):(ty+th+TOP);
   play.style.height=H+'px';
+  fact.box={x:tx,y:ty,w:tw,h:th};
 
   var sc=Math.max(Bw/IW,Bh/IH), iw=IW*sc, ih=IH*sc;
   var ox=Math.min(0,Math.max(Bw-iw,Bw/2-FX*iw));
@@ -309,7 +311,7 @@ function lock(p){
   if(placed===total){
     play.classList.add('done');
     msg.textContent='You did it! The whole picture is back together.';
-    fact.hidden=false;
+    var b=fact.box; fact.classList.add('in-tray'); fact.style.left=b.x+'px'; fact.style.top=b.y+'px'; fact.style.width=b.w+'px'; fact.style.height=b.h+'px'; play.appendChild(fact); fact.hidden=false;
   } else {
     msg.textContent='Nice! '+placed+' of '+total+' pieces placed.';
   }
