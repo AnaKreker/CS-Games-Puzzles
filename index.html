@@ -91,6 +91,12 @@
       font-size: 0.9rem;
       color: var(--purple);
     }
+    .featured { margin: 18px 0 4px; }
+    .featured .label { font-family: 'Fredoka', sans-serif; font-size: 1.7rem; margin: 0 0 12px; }
+    .card.big { flex-direction: row; gap: 24px; min-height: 190px; font-size: 2.6rem; }
+    .card.big .icon { font-size: 6rem; }
+    .card.big .icon svg { width: 130px; height: 130px; }
+    .card.big .icon img { width: 8rem; }
   </style>
 </head>
 <body>
@@ -107,6 +113,9 @@
   <script>
     // ✏️ To add a game: copy a line and change the title, file, and icon.
     // "file" must match the game's file name in your repository.
+    // ⭐ Big button at the top. Change the title, or use "" for none.
+    const FEATURED = "Robot to the Snack";
+
     const sections = [
 
       {
@@ -148,6 +157,19 @@
     ];
 
     const main = document.getElementById("games");
+    // ⭐ Today's game: a big button at the top
+    sections.forEach(section => section.games.forEach(game => {
+      if (game.title !== FEATURED) return;
+      const box = document.createElement("section");
+      box.className = "featured";
+      box.innerHTML = `<h2 class="label">⭐ Today's game</h2>`;
+      const a = document.createElement("a");
+      a.className = "card big " + section.color;
+      a.href = game.file;
+      a.innerHTML = `<span class="icon">${game.icon}</span>${game.title}`;
+      box.appendChild(a);
+      main.appendChild(box);
+    }));
     sections.forEach(section => {
       const h2 = document.createElement("h2");
       h2.textContent = section.title;
