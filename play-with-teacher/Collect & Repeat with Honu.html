@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Collect &amp; Repeat with Honu</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --sand:#FFF6E5; --sand2:#FCEBC6; --ink:#1F3B57; --ink2:#4A6582;
+  --sea:#7FD3F0; --sea2:#4FB6DE; --deep:#0E3A5C;
+  --move:#4C97FF; --collect:#22A86B; --repeat:#FF9F1C; --coral:#FF6B6B; --sun:#FFE14D;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--deep);overflow:hidden;font-family:'Baloo 2',system-ui,sans-serif;color:var(--ink)}
+button{font-family:inherit;cursor:pointer}
+#viewport{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
+#stage{width:1600px;height:900px;flex:none;position:relative;background:var(--sand);border-radius:28px;overflow:hidden;transform-origin:center center;
+  background-image:radial-gradient(circle at 92% 8%, #FFE9B8 0 120px, transparent 121px),radial-gradient(circle at 4% 96%, #DDF4FC 0 160px, transparent 161px)}
+.slide{position:absolute;inset:0;padding:48px 72px 120px;display:none;flex-direction:column;gap:22px}
+.slide.active{display:flex;animation:slideIn .35s ease}
+@keyframes slideIn{from{opacity:0;transform:translateX(30px)}to{opacity:1;transform:none}}
+h1{font-size:68px;line-height:1.05;margin:0;font-weight:800;letter-spacing:-.5px}
+h2{font-size:34px;margin:0;font-weight:600;color:var(--ink2);line-height:1.2}
+.tag{display:inline-block;font-size:24px;font-weight:800;padding:4px 18px;border-radius:999px;color:#fff;background:var(--ink);letter-spacing:.5px;align-self:flex-start}
+.tag.c{background:var(--collect)} .tag.r{background:var(--repeat)} .tag.p{background:var(--coral)}
+
+/* nav */
+#nav{position:absolute;left:0;right:0;bottom:0;height:96px;display:flex;align-items:center;justify-content:space-between;padding:0 32px;z-index:20}
+.navbtn{height:70px;border:none;border-radius:20px;font-size:30px;font-weight:800;padding:0 32px;color:#fff;background:#8E6CEF;box-shadow:0 6px 0 rgba(0,0,0,.2)}
+.navbtn:active{transform:translateY(4px);box-shadow:0 2px 0 rgba(0,0,0,.2)}
+.navbtn:disabled{opacity:.25;cursor:default}
+#dots{display:flex;gap:12px;align-items:center}
+#dots button{width:20px;height:20px;border-radius:50%;border:none;background:#E3CFA2;padding:0}
+#dots button.on{background:var(--ink);transform:scale(1.3)}
+#tools{position:absolute;right:230px;bottom:22px;display:flex;gap:10px;z-index:21}
+#tools button{height:52px;min-width:52px;border:none;border-radius:14px;background:#fff;color:var(--ink);font-size:22px;font-weight:700;box-shadow:0 4px 0 #E3CFA2;padding:0 14px}
+#notes{position:absolute;left:24px;right:24px;bottom:104px;background:#1F3B57;color:#fff;border-radius:20px;padding:20px 28px;font-size:24px;line-height:1.4;z-index:30;display:none;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+#notes.show{display:block}
+#notes b{color:var(--sun)}
+
+/* blocks */
+.blk{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:76px;min-width:84px;padding:0 16px;border-radius:16px;color:#fff;font-weight:800;font-size:28px;box-shadow:0 6px 0 rgba(0,0,0,.2);cursor:pointer;user-select:none;position:relative;transition:transform .15s, outline-color .15s;outline:0 solid transparent;flex:none}
+.blk svg{width:44px;height:44px;flex:none}
+.blk.move{background:var(--move)}
+.blk.collect{background:var(--collect)}
+.blk.repeat{background:var(--repeat)}
+.palette .blk:active{transform:translateY(4px);box-shadow:0 2px 0 rgba(0,0,0,.2)}
+.blk.now{outline:7px solid var(--sun);transform:scale(1.08);z-index:2}
+.prog .blk{height:58px;min-width:70px;font-size:24px;padding:0 12px;box-shadow:0 4px 0 rgba(0,0,0,.18)}
+.prog .blk svg{width:34px;height:34px}
+
+.palette{display:flex;flex-wrap:wrap;gap:14px;padding:18px;background:#fff;border-radius:22px;box-shadow:0 4px 0 #EAD7AD}
+.palette-label{font-size:22px;font-weight:800;color:var(--ink2);margin:0 0 -6px 4px}
+.prog-wrap{background:#fff;border-radius:22px;padding:16px;box-shadow:0 4px 0 #EAD7AD;flex:1;min-height:0;position:relative;
+  background-image:radial-gradient(#EFE3C8 1.5px, transparent 1.6px);background-size:22px 22px}
+.prog{display:flex;flex-direction:column;flex-wrap:wrap;align-content:flex-start;align-items:flex-start;gap:6px;height:100%;column-gap:28px}
+.hat{height:50px;display:inline-flex;align-items:center;gap:8px;padding:0 18px;border-radius:24px 24px 10px 10px;background:#8E6CEF;color:#fff;font-weight:800;font-size:22px;cursor:pointer;flex:none;box-shadow:0 4px 0 rgba(0,0,0,.18)}
+.slot{height:54px;min-width:150px;border:4px dashed #C9B68C;border-radius:14px;color:#A8936A;font-weight:800;font-size:20px;display:flex;align-items:center;justify-content:center;padding:0 12px;flex:none}
+.rep{display:flex;flex-direction:column;align-items:flex-start;flex:none}
+.rep .rep-head{border-radius:16px 16px 16px 0;gap:6px;padding:0 10px}
+.rep .rep-body{border-left:24px solid var(--repeat);padding:6px 0 6px 8px;display:flex;flex-direction:column;align-items:flex-start;gap:6px;min-height:40px;border-radius:0 0 0 0}
+.rep .rep-foot{width:150px;height:22px;background:var(--repeat);border-radius:0 0 14px 14px;box-shadow:0 4px 0 rgba(0,0,0,.18)}
+.rep.target .rep-body{background:rgba(255,159,28,.13)}
+.rep.target .rep-head{outline:5px solid #FFC56B}
+.rep .slot{border-color:#FFB54D;color:#E08A10;height:48px}
+.cnt{width:40px;height:40px;border-radius:12px;border:none;background:rgba(255,255,255,.9);color:#C46D00;font-size:28px;font-weight:800;line-height:1;padding:0}
+.n{min-width:36px;text-align:center;font-size:34px;background:#fff;color:#C46D00;border-radius:10px;padding:0 4px;line-height:44px}
+.badge{position:absolute;top:-18px;right:-14px;background:var(--sun);color:var(--ink);font-size:20px;border-radius:999px;padding:0 10px;display:none;box-shadow:0 2px 0 rgba(0,0,0,.2)}
+.badge.show{display:block}
+.blk.pa{box-shadow:0 0 0 6px #FFD84D, 0 4px 0 rgba(0,0,0,.18)}
+.blk.pb{box-shadow:0 0 0 6px #FF8FB1, 0 4px 0 rgba(0,0,0,.18)}
+
+.ctrls{display:flex;gap:12px}
+.ctrls button{height:72px;border:none;border-radius:18px;font-size:28px;font-weight:800;padding:0 26px;color:#fff;box-shadow:0 6px 0 rgba(0,0,0,.2)}
+.ctrls button:active{transform:translateY(4px);box-shadow:0 2px 0 rgba(0,0,0,.2)}
+.b-run{background:#2EBD59} .b-run.stop{background:var(--coral)}
+.b-undo{background:#8A9BB0} .b-clear{background:#B8A27A} .b-ans{background:#fff;color:var(--ink)!important;font-size:24px!important}
+.big-btn{height:84px;border:none;border-radius:22px;font-size:34px;font-weight:800;padding:0 40px;color:#fff;background:#2EBD59;box-shadow:0 7px 0 rgba(0,0,0,.2)}
+.big-btn:active{transform:translateY(4px);box-shadow:0 3px 0 rgba(0,0,0,.2)}
+
+/* board */
+.board{position:relative;background:var(--sea);padding:14px;border-radius:24px;box-shadow:inset 0 0 0 6px var(--sea2), 0 6px 0 #3E9CC4;display:inline-block;flex:none}
+.gw{position:relative}
+.cell{position:absolute;background:#F6DFA8;border-radius:14px}
+.cell.alt{background:#F1D394}
+.turtle{position:absolute;z-index:3;transition:left .42s ease-in-out, top .42s ease-in-out}
+.turtle .tin{width:100%;height:100%;transition:transform .3s ease}
+.turtle svg{width:100%;height:100%;display:block}
+.turtle.bonk .tin{animation:bonk .45s}
+.turtle.shake .tin{animation:shake .45s}
+.turtle.hop .tin{animation:hop .5s}
+@keyframes bonk{30%{scale:.85 1.1}60%{scale:1.1 .9}}
+@keyframes shake{20%,60%{translate:-8px 0}40%,80%{translate:8px 0}}
+@keyframes hop{40%{translate:0 -24px}}
+.shell{position:absolute;display:flex;align-items:center;justify-content:center;z-index:2}
+.shell svg{width:68%;height:68%;animation:bob 2.2s ease-in-out infinite}
+.shell.got svg{animation:got .6s forwards}
+@keyframes bob{50%{transform:translateY(-5px) rotate(4deg)}}
+@keyframes got{40%{transform:scale(1.5) translateY(-20px)}100%{transform:scale(0) translateY(-60px);opacity:0}}
+.bucket{position:absolute;right:16px;top:-30px;background:#fff;border-radius:999px;padding:2px 16px 2px 8px;display:flex;align-items:center;gap:6px;font-size:28px;font-weight:800;box-shadow:0 4px 0 #EAD7AD;z-index:5}
+.bucket svg{width:42px;height:42px}
+.bucket.pop{animation:bpop .4s}
+@keyframes bpop{50%{transform:scale(1.25)}}
+.bubble{position:absolute;left:50%;top:-34px;transform:translate(-50%,-100%) scale(.6);background:#fff;border-radius:22px;padding:10px 26px;font-size:30px;font-weight:800;white-space:nowrap;opacity:0;transition:.25s;z-index:6;box-shadow:0 6px 18px rgba(0,0,0,.15);pointer-events:none}
+.bubble.show{opacity:1;transform:translate(-50%,-100%) scale(1)}
+.bubble.win{background:#2EBD59;color:#fff}
+.bubble.oops{background:var(--coral);color:#fff}
+.bubble.info{background:var(--ink);color:#fff}
+
+.play{display:flex;gap:44px;flex:1;min-height:0;align-items:stretch}
+.play .lcol{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:20px;padding-top:40px}
+.play .rcol{flex:1;display:flex;flex-direction:column;gap:14px;min-width:0;min-height:0}
+
+/* misc */
+.row{display:flex;gap:28px;align-items:center}
+.card{background:#fff;border-radius:26px;padding:30px 34px;box-shadow:0 6px 0 #EAD7AD}
+.say{font-size:40px;font-weight:700;line-height:1.25}
+.say b{color:var(--coral)}
+.kbd-rule{display:flex;align-items:center;gap:18px;font-size:34px;font-weight:700;background:#fff;border-radius:22px;padding:18px 26px;box-shadow:0 5px 0 #EAD7AD}
+.big-emoji{font-size:64px;line-height:1}
+.confetti{position:absolute;width:14px;height:22px;top:-30px;z-index:50;border-radius:3px;animation:fall linear forwards;pointer-events:none}
+@keyframes fall{to{transform:translateY(980px) rotate(720deg)}}
+
+/* title */
+.title-wrap{flex:1;display:flex;align-items:center;gap:40px}
+.title-wrap h1{font-size:120px;line-height:.95}
+.title-wrap h1 .c{color:var(--collect)} .title-wrap h1 .r{color:var(--repeat)}
+.hero{width:460px;height:460px;flex:none;position:relative;cursor:pointer}
+.hero .tin{animation:swim 3s ease-in-out infinite}
+@keyframes swim{50%{transform:translateY(-14px) rotate(-4deg)}}
+.floaty{position:absolute;width:90px;animation:bob 2.6s ease-in-out infinite}
+
+/* body game */
+.bg-wrap{display:flex;gap:44px;flex:1;min-height:0}
+.bg-left{display:flex;flex-direction:column;gap:18px;width:640px}
+.bg-prog{background:#fff;border-radius:22px;padding:22px;box-shadow:0 4px 0 #EAD7AD}
+.act-chip{height:54px;padding:0 18px;border-radius:16px;background:#fff;border:4px solid #EAD7AD;font-size:28px;font-weight:800;display:inline-flex;align-items:center;gap:8px;color:var(--ink)}
+.act-chip span{font-size:38px}
+.rep .act-chip{height:58px;border-color:#FFD08A}
+.bg-stage{flex:1;background:#fff;border-radius:30px;box-shadow:0 6px 0 #EAD7AD;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;overflow:hidden}
+.bg-emoji{font-size:250px;line-height:1}
+.bg-emoji.pop{animation:epop .5s}
+@keyframes epop{0%{transform:scale(.4)}60%{transform:scale(1.15)}}
+.bg-label{font-size:64px;font-weight:800}
+.bg-count{position:absolute;top:24px;right:30px;font-size:36px;font-weight:800;background:var(--repeat);color:#fff;border-radius:999px;padding:4px 24px;display:none}
+.bg-count.show{display:block}
+
+.recap{display:grid;grid-template-columns:1fr 1fr;gap:40px;flex:1}
+.recap .card{display:flex;flex-direction:column;gap:20px;align-items:flex-start}
+.recap h3{margin:0;font-size:52px}
+.recap p{margin:0;font-size:36px;font-weight:600;line-height:1.3}
+</style>
+</head>
+<body>
+<div id="viewport"><div id="stage">
+
+<!-- 1 TITLE -->
+<section class="slide" data-notes="<b>Hook:</b> Tap Honu to say hi! Today Honu needs our help picking up shells on the beach. We'll learn two new blocks: <b>Collect</b> and <b>Repeat</b>. (Honu means sea turtle in Hawaiian.)">
+  <div class="title-wrap">
+    <div style="display:flex;flex-direction:column;gap:26px">
+      <span class="tag">Coding Time!</span>
+      <h1><span class="c">Collect</span><br>&amp; <span class="r">Repeat</span></h1>
+      <h2 style="font-size:40px">Help Honu the turtle pick up shells!</h2>
+      <div><button class="big-btn" onclick="go(1)">Let's go ▶</button></div>
+    </div>
+    <div class="hero" id="hero"><div class="tin" data-turtle></div>
+      <div class="floaty" style="left:-30px;top:330px" data-shell></div>
+      <div class="floaty" style="right:-10px;top:40px;animation-delay:.6s" data-shell></div>
+      <div class="floaty" style="right:20px;top:360px;animation-delay:1.1s;width:70px" data-shell></div>
+    </div>
+  </div>
+</section>
+
+<!-- 4 PUZZLE 1 -->
+<section class="slide" data-notes="<b>Puzzle 1 (together):</b> Count the steps out loud with the class: “1, 2, 3 … now collect!” Tap blocks to build the code, then press <b>Run</b>. Mistakes are great! Use <b>Undo</b> and try again. 💡 shows the answer.">
+  <span class="tag p">Puzzle 1</span>
+  <h1>Get the shell!</h1>
+  <div class="play">
+    <div class="lcol"><div id="b-p1"></div></div>
+    <div class="rcol" id="c-p1"></div>
+  </div>
+</section>
+
+<!-- 5 PUZZLE 2 -->
+<section class="slide" data-notes="<b>Puzzle 2:</b> Two shells! Ask: “Which shell should Honu get first?” Remember to Collect at <b>each</b> shell. Invite a student up to tap the blocks.">
+  <span class="tag p">Puzzle 2</span>
+  <h1>Two shells!</h1>
+  <div class="play">
+    <div class="lcol"><div id="b-p2"></div></div>
+    <div class="rcol" id="c-p2"></div>
+  </div>
+</section>
+
+<!-- 6 TOO MANY BLOCKS -->
+<section class="slide" data-notes="<b>Notice the pattern:</b> Run this long code. Ask: “Wow, that's a LOT of blocks! Do you see blocks that keep happening again?” Tap <b>Show the pattern</b>. Chant it together: “Move, collect! Move, collect!”">
+  <span class="tag">Hmm…</span>
+  <h1>So many blocks!</h1>
+  <h2>Do you see a pattern?</h2>
+  <div class="play" style="gap:40px">
+    <div class="lcol" style="padding-top:20px;justify-content:flex-start;gap:30px"><div id="b-long"></div>
+      <button class="big-btn" id="pat-btn" style="background:#8E6CEF">✨ Show the pattern</button>
+    </div>
+    <div class="rcol" id="c-long"></div>
+  </div>
+</section>
+
+<!-- 7 MEET REPEAT -->
+<section class="slide" data-notes="<b>New block:</b> <b>Repeat</b> does the blocks inside it again and again. The number says how many times. Run it with 4 (4 shells!). Then change it to 2 and ask: “What will happen now?” (Honu stops early, shells are left.) Try 5 too: Bonk! Then back to 4.">
+  <span class="tag r">New block!</span>
+  <h1>The <span style="color:var(--repeat)">Repeat</span> block</h1>
+  <h2>Repeat = do it again! The number says <b>how many times</b>.</h2>
+  <div class="play" style="gap:40px">
+    <div class="lcol" style="padding-top:40px;justify-content:flex-start"><div id="b-rep"></div>
+      <div class="say" style="font-size:30px;color:var(--ink2);margin-top:16px">Change the number with <b style="color:var(--repeat)">−</b> and <b style="color:var(--repeat)">+</b>.<br>What happens?</div>
+    </div>
+    <div class="rcol" id="c-rep"></div>
+  </div>
+</section>
+
+<!-- 9 PUZZLE 3 -->
+<section class="slide" data-notes="<b>Puzzle 3 (Repeat):</b> Tap <b>Repeat</b> first, then tap blocks to put them <b>inside</b> it. Ask: “What does Honu do again and again?” (Up, collect.) “How many shells?” (4) Tap the purple “When run” block to add blocks outside the Repeat.">
+  <span class="tag p">Puzzle 3</span>
+  <h1>Use Repeat!</h1>
+  <div class="play">
+    <div class="lcol"><div id="b-p3"></div></div>
+    <div class="rcol" id="c-p3"></div>
+  </div>
+</section>
+
+<!-- 10 PUZZLE 4 -->
+<section class="slide" data-notes="<b>Bonus — Shell stairs:</b> Harder! The pattern is <b>right, up, collect</b>. Act it out first: step right, step up, scoop. How many times? (3)">
+  <span class="tag p">Bonus</span>
+  <h1>Shell stairs</h1>
+  <div class="play">
+    <div class="lcol"><div id="b-p4"></div></div>
+    <div class="rcol" id="c-p4"></div>
+  </div>
+</section>
+
+<!-- 11 RECAP -->
+<section class="slide" data-notes="<b>Wrap-up:</b> Ask: “What does Collect do?” (Picks up.) “What does Repeat do?” (Does it again.) Make the hand motions: scoop for Collect, spin your hands for Repeat. Tap the turtle to celebrate!">
+  <span class="tag">We learned</span>
+  <h1>Great coding, everyone!</h1>
+  <div class="recap">
+    <div class="card"><span class="blk collect" data-ic="collect"></span><h3 style="color:var(--collect)">Collect</h3><p>Stand <b>on</b> it,<br>then pick it up!</p></div>
+    <div class="card" style="position:relative"><span class="blk repeat" data-ic="repeat"></span><h3 style="color:var(--repeat)">Repeat</h3><p>Do it again<br>and again!</p>
+      <div id="end-turtle" style="position:absolute;right:30px;bottom:24px;width:190px;height:190px;cursor:pointer"><div class="tin" data-turtle></div></div>
+    </div>
+  </div>
+</section>
+
+<div id="notes"></div>
+<div id="tools">
+  <button id="t-notes" title="Teacher notes (N)">📝 Notes</button>
+  <button id="t-sound" title="Sound">🔊</button>
+  <button id="t-full" title="Full screen">⛶</button>
+</div>
+<div id="nav">
+  <button class="navbtn" id="prev">◀ Back</button>
+  <div id="dots"></div>
+  <button class="navbtn" id="next">Next ▶</button>
+</div>
+
+</div></div>
+
+<script>
+/* ---------- art ---------- */
+const TURTLE = `<svg viewBox="0 0 100 100" aria-label="Honu the turtle">
+<ellipse cx="22" cy="44" rx="13" ry="8" fill="#6CC36C" transform="rotate(-35 22 44)"/>
+<ellipse cx="78" cy="44" rx="13" ry="8" fill="#6CC36C" transform="rotate(35 78 44)"/>
+<ellipse cx="27" cy="78" rx="10" ry="7" fill="#6CC36C" transform="rotate(35 27 78)"/>
+<ellipse cx="73" cy="78" rx="10" ry="7" fill="#6CC36C" transform="rotate(-35 73 78)"/>
+<path d="M46 86 L50 96 L54 86Z" fill="#6CC36C"/>
+<circle cx="50" cy="22" r="16" fill="#7DD37D"/>
+<circle cx="43.5" cy="19" r="3.6" fill="#24313D"/><circle cx="56.5" cy="19" r="3.6" fill="#24313D"/>
+<circle cx="44.6" cy="17.8" r="1.2" fill="#fff"/><circle cx="57.6" cy="17.8" r="1.2" fill="#fff"/>
+<ellipse cx="39" cy="25" rx="3.2" ry="2" fill="#FF9CB0"/><ellipse cx="61" cy="25" rx="3.2" ry="2" fill="#FF9CB0"/>
+<path d="M46 26 Q50 29.5 54 26" stroke="#24313D" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+<ellipse cx="50" cy="60" rx="30" ry="27" fill="#3F9E5A" stroke="#2C7543" stroke-width="3"/>
+<path d="M50 47 L60 53 L60 65 L50 71 L40 65 L40 53Z" fill="#5BB872" stroke="#2C7543" stroke-width="2"/>
+<path d="M50 47 L50 35 M60 53 L74 47 M60 65 L74 72 M50 71 L50 85 M40 65 L26 72 M40 53 L26 47" stroke="#2C7543" stroke-width="2"/>
+</svg>`;
+const SHELL = `<svg viewBox="0 0 60 60" aria-label="shell">
+<path d="M30 54 L6 30 A25 25 0 0 1 54 30 Z" fill="#FF9FB2" stroke="#E0567A" stroke-width="3" stroke-linejoin="round"/>
+<path d="M30 54 L14 14 M30 54 L23 8 M30 54 L30 6 M30 54 L37 8 M30 54 L46 14" stroke="#E0567A" stroke-width="2.5" stroke-linecap="round"/>
+<path d="M22 50 L30 58 L38 50Z" fill="#E0567A"/></svg>`;
+const SHELL_W = SHELL.replace(/#FF9FB2/g,'#fff').replace(/#E0567A/g,'#1B8A57');
+const arrow = deg => `<svg viewBox="0 0 40 40" style="transform:rotate(${deg}deg)"><path d="M20 3 L35 20 H25.5 V37 H14.5 V20 H5 Z" fill="#fff" stroke="#fff" stroke-width="2" stroke-linejoin="round"/></svg>`;
+const LOOP = `<svg viewBox="0 0 40 40"><path d="M30 14 A12 12 0 1 0 32 24" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round"/><path d="M24 6 L34 14 L23 19Z" fill="#fff"/></svg>`;
+const DIRS = {up:[0,-1,0], right:[1,0,90], down:[0,1,180], left:[-1,0,270]};
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const $ = (s, r=document) => r.querySelector(s);
+const $$ = (s, r=document) => [...r.querySelectorAll(s)];
+function el(tag, cls, html){ const e=document.createElement(tag); if(cls) e.className=cls; if(html!=null) e.innerHTML=html; return e; }
+
+$$('[data-turtle]').forEach(e => e.innerHTML = TURTLE);
+$$('[data-shell]').forEach(e => e.innerHTML = SHELL);
+
+/* ---------- sound ---------- */
+let actx = null, muted = false;
+function tone(freqs, dur=.12, type='sine'){
+  if(muted) return;
+  try{
+    actx = actx || new (window.AudioContext||window.webkitAudioContext)();
+    if(actx.state === 'suspended') actx.resume();
+    const t = actx.currentTime;
+    freqs.forEach((f,i) => {
+      const o = actx.createOscillator(), g = actx.createGain();
+      o.type = type; o.frequency.value = f;
+      g.gain.setValueAtTime(.0001, t+i*dur);
+      g.gain.exponentialRampToValueAtTime(.18, t+i*dur+.01);
+      g.gain.exponentialRampToValueAtTime(.0001, t+(i+1)*dur);
+      o.connect(g).connect(actx.destination); o.start(t+i*dur); o.stop(t+(i+1)*dur+.03);
+    });
+  }catch(e){}
+}
+const SFX = {
+  step:()=>tone([420],.07,'triangle'), collect:()=>tone([660,990],.1), bonk:()=>tone([190,130],.12,'square'),
+  win:()=>tone([523,659,784,1047],.13), oops:()=>tone([330,230],.13,'triangle'), tap:()=>tone([600],.05,'triangle'),
+  beat:()=>tone([520,780],.09)
+};
+
+function confetti(){
+  const st = $('#stage'), cols = ['#FF6B6B','#FFE14D','#4C97FF','#22A86B','#FF9F1C','#8E6CEF','#FF9FB2'];
+  for(let i=0;i<70;i++){
+    const c = el('div','confetti');
+    c.style.left = Math.random()*1600+'px';
+    c.style.background = cols[i%cols.length];
+    c.style.animationDuration = (1.6+Math.random()*1.4)+'s';
+    c.style.animationDelay = (Math.random()*.4)+'s';
+    st.appendChild(c); setTimeout(()=>c.remove(), 3400);
+  }
+}
+
+/* ---------- block element ---------- */
+function blockEl(b){
+  if(b.t === 'collect') return el('div','blk collect', SHELL_W+'<span>collect</span>');
+  if(b.t === 'repeat') return el('div','blk repeat', LOOP+'<span>repeat</span>');
+  return el('div','blk move', arrow(DIRS[b.t][2]));
+}
+$$('[data-ic]').forEach(e => { const b = blockEl({t:e.dataset.ic}); e.innerHTML = b.innerHTML; e.style.cursor='default'; });
+
+/* ---------- board ---------- */
+class Board{
+  constructor(host, cfg){
+    this.cfg = cfg; this.c = cfg.cell || 100; this.gap = 6; this.speed = cfg.speed || 520;
+    host.classList.add('board'); this.host = host;
+    this.bubble = el('div','bubble'); host.appendChild(this.bubble);
+    this.gw = el('div','gw'); host.appendChild(this.gw);
+    const {cols, rows} = cfg;
+    this.gw.style.width = (cols*this.c + (cols-1)*this.gap)+'px';
+    this.gw.style.height = (rows*this.c + (rows-1)*this.gap)+'px';
+    for(let y=0;y<rows;y++) for(let x=0;x<cols;x++){
+      const c = el('div','cell'+((x+y)%2?' alt':'')); this.place(c,x,y); this.gw.appendChild(c);
+    }
+    this.turtle = el('div','turtle','<div class="tin">'+TURTLE+'</div>'); this.gw.appendChild(this.turtle);
+    this.tin = this.turtle.firstChild;
+    if((cfg.shells||[]).length){
+      this.bucket = el('div','bucket'); host.appendChild(this.bucket);
+    }
+    this.rot = 0; this.running = false; this.busy = false;
+    this.reset();
+  }
+  place(e,x,y){ e.style.left = x*(this.c+this.gap)+'px'; e.style.top = y*(this.c+this.gap)+'px'; e.style.width = e.style.height = this.c+'px'; }
+  turnTo(deg){ const cur = ((this.rot%360)+360)%360; const d = ((deg-cur+540)%360)-180; this.rot += d; this.tin.style.transform = `rotate(${this.rot}deg)`; }
+  reset(){
+    $$('.shell', this.gw).forEach(s => s.remove());
+    this.shells = new Map();
+    for(const [x,y] of this.cfg.shells||[]){
+      const s = el('div','shell',SHELL); this.place(s,x,y); this.gw.appendChild(s); this.shells.set(x+','+y, s);
+    }
+    [this.x, this.y] = this.cfg.start;
+    this.turtle.style.transition = 'none'; this.tin.style.transition = 'none';
+    this.place(this.turtle, this.x, this.y);
+    this.rot = DIRS[this.cfg.dir||'right'][2]; this.tin.style.transform = `rotate(${this.rot}deg)`;
+    void this.turtle.offsetWidth;
+    this.turtle.style.transition = ''; this.tin.style.transition = '';
+    this.got = 0; this.updBucket(false); this.hide();
+  }
+  updBucket(pop=true){
+    if(!this.bucket) return;
+    this.bucket.innerHTML = SHELL + `<span>${this.got} / ${(this.cfg.shells||[]).length}</span>`;
+    if(pop){ this.bucket.classList.remove('pop'); void this.bucket.offsetWidth; this.bucket.classList.add('pop'); }
+  }
+  anim(cls){ this.turtle.classList.remove(cls); void this.turtle.offsetWidth; this.turtle.classList.add(cls); setTimeout(()=>this.turtle.classList.remove(cls), 500); }
+  async move(d){
+    const [dx,dy,deg] = DIRS[d]; this.turnTo(deg);
+    const nx = this.x+dx, ny = this.y+dy;
+    if(nx<0 || ny<0 || nx>=this.cfg.cols || ny>=this.cfg.rows){ await sleep(200); SFX.bonk(); this.anim('bonk'); await sleep(500); return false; }
+    this.x = nx; this.y = ny; this.place(this.turtle, nx, ny); SFX.step();
+    await sleep(this.speed); return true;
+  }
+  async collect(){
+    const k = this.x+','+this.y, s = this.shells.get(k);
+    if(!s){ SFX.oops(); this.anim('shake'); await sleep(550); return false; }
+    this.shells.delete(k); s.classList.add('got'); setTimeout(()=>s.remove(), 650);
+    this.got++; this.updBucket(); SFX.collect(); this.anim('hop');
+    await sleep(this.speed); return true;
+  }
+  say(t, kind='info', ms){ this.bubble.textContent = t; this.bubble.className = 'bubble show '+kind; clearTimeout(this._h); if(ms) this._h = setTimeout(()=>this.hide(), ms); }
+  hide(){ this.bubble.className = 'bubble'; }
+  // manual one-off action (free play slides)
+  async act(t){
+    if(this.busy || this.running) return; this.busy = true; this.hide();
+    let ok = t==='collect' ? await this.collect() : await this.move(t);
+    if(!ok) this.say(t==='collect' ? 'No shell here!' : 'Bonk! The edge!', 'oops', 1600);
+    else if(t==='collect' && this.shells.size===0 && this.got>0){ this.say('Got it! 🎉','win'); SFX.win(); confetti(); }
+    this.busy = false;
+  }
+  async run(prog, onStep){
+    if(this.running || this.busy) return;
+    this.running = true; this.stopFlag = false; this.reset(); await sleep(250);
+    const steps = [];
+    for(const b of prog){
+      if(b.t === 'repeat'){ for(let i=1;i<=b.n;i++) for(const c of b.body) steps.push({b:c, rep:b, i}); }
+      else steps.push({b});
+    }
+    if(!steps.length){ this.say('Add some blocks first!','info',2000); this.running=false; onStep&&onStep(null); return; }
+    let ok = true, msg = '';
+    for(const st of steps){
+      if(this.stopFlag){ ok = null; break; }
+      onStep && onStep(st);
+      if(st.b.t === 'collect'){ if(!await this.collect()){ ok=false; msg='Oops! No shell here.'; break; } }
+      else if(!await this.move(st.b.t)){ ok=false; msg='Bonk! That’s the edge.'; break; }
+    }
+    onStep && onStep(null, ok===false);
+    if(ok === true){
+      if(this.shells.size === 0){ this.say('You got them all! 🎉','win'); SFX.win(); confetti(); }
+      else { const n=this.shells.size; this.say(`${n} shell${n>1?'s':''} left. Try again!`,'oops'); SFX.oops(); }
+    } else if(ok === false) this.say(msg,'oops');
+    this.running = false;
+  }
+}
+
+/* ---------- builder (code area) ---------- */
+class Builder{
+  constructor(host, opt){
+    this.board = opt.board; this.locked = !!opt.locked; this.solution = opt.solution;
+    this.start = JSON.parse(JSON.stringify(opt.program||[]));
+    this.prog = JSON.parse(JSON.stringify(this.start)); this.target = null; this.hist = [];
+    if(!this.locked){
+      host.appendChild(el('div','palette-label','Tap a block to add it:'));
+      const pal = el('div','palette'); host.appendChild(pal);
+      for(const t of opt.palette){ const b = blockEl({t}); b.onclick = () => this.add(t); pal.appendChild(b); }
+    }
+    const pw = el('div','prog-wrap'); this.progEl = el('div','prog'); pw.appendChild(this.progEl); host.appendChild(pw);
+    pw.onclick = e => { if(e.target===pw || e.target===this.progEl){ if(!this.locked && this.target){ this.target=null; this.render(); } } };
+    const ct = el('div','ctrls'); host.appendChild(ct);
+    this.runBtn = el('button','b-run','▶ Run'); ct.appendChild(this.runBtn);
+    this.runBtn.onclick = () => this.toggleRun();
+    if(!this.locked){
+      const u = el('button','b-undo','↶ Undo'); u.onclick = () => this.undo(); ct.appendChild(u);
+      const c = el('button','b-clear','✕ Clear'); c.onclick = () => this.clear(); ct.appendChild(c);
+      if(this.solution){ const a = el('button','b-ans','💡 Answer'); a.onclick = () => this.showAnswer(); ct.appendChild(a); }
+    } else {
+      const r = el('button','b-undo','↺ Reset'); r.onclick = () => { if(!this.board.running) this.board.reset(); }; ct.appendChild(r);
+    }
+    this.render();
+  }
+  async toggleRun(){
+    if(this.board.running){ this.board.stopFlag = true; return; }
+    this.runBtn.textContent = '■ Stop'; this.runBtn.classList.add('stop');
+    await this.board.run(this.prog, (st) => this.onStep(st));
+    this.runBtn.textContent = '▶ Run'; this.runBtn.classList.remove('stop');
+  }
+  add(t){
+    if(this.board.running) return; SFX.tap(); this.board.hide();
+    const b = t==='repeat' ? {t, n:2, body:[]} : {t};
+    let list;
+    if(t === 'repeat'){ list = this.prog; this.hist.push({b, list, prev:this.target}); this.target = b; }
+    else { list = this.target ? this.target.body : this.prog; this.hist.push({b, list, prev:this.target}); }
+    list.push(b); this.render();
+    requestAnimationFrame(()=>{ if(b.el){ b.el.animate([{transform:'scale(.5)'},{transform:'scale(1.1)'},{transform:'scale(1)'}],{duration:260}); } });
+  }
+  undo(){
+    if(this.board.running) return;
+    const h = this.hist.pop(); if(!h) return; SFX.tap();
+    const i = h.list.lastIndexOf(h.b); if(i>-1) h.list.splice(i,1);
+    if(h.b.t === 'repeat') this.target = h.prev;
+    if(this.target && !this.prog.includes(this.target)) this.target = null;
+    this.board.reset(); this.render();
+  }
+  clear(){ if(this.board.running) return; this.prog = []; this.hist = []; this.target = null; this.board.reset(); this.render(); }
+  showAnswer(){ if(this.board.running) return; this.prog = JSON.parse(JSON.stringify(this.solution)); this.hist = []; this.target = null; this.board.reset(); this.render(); }
+  render(){
+    const p = this.progEl; p.innerHTML = '';
+    const hat = el('div','hat','▶ When run'); p.appendChild(hat);
+    hat.onclick = () => { if(!this.locked && this.target){ this.target = null; this.render(); } };
+    for(const b of this.prog) p.appendChild(this.progBlock(b));
+    if(!this.locked && !this.target) p.appendChild(el('div','slot', this.prog.length ? '+' : '+ blocks go here'));
+    if(this.afterRender) this.afterRender();
+  }
+  progBlock(b){
+    if(b.t !== 'repeat'){ const e = blockEl(b); e.style.cursor='default'; b.el = e; return e; }
+    const w = el('div','rep'+(this.target===b?' target':''));
+    const head = el('div','blk repeat rep-head', LOOP+'<span>repeat</span>');
+    const minus = el('button','cnt','−'), n = el('span','n', b.n), plus = el('button','cnt','+');
+    head.append(minus, n, plus, el('span','', 'times'));
+    const badge = el('span','badge'); head.appendChild(badge);
+    const ch = d => e => { e.stopPropagation(); if(this.board.running) return; b.n = Math.max(1, Math.min(9, b.n+d)); SFX.tap(); this.board.reset(); this.render(); };
+    minus.onclick = ch(-1); plus.onclick = ch(1);
+    head.onclick = () => { if(this.locked || this.board.running) return; this.target = this.target===b ? null : b; SFX.tap(); this.render(); };
+    const body = el('div','rep-body');
+    for(const c of b.body){ const e = blockEl(c); e.style.cursor='default'; c.el = e; body.appendChild(e); }
+    if(this.target === b) body.appendChild(el('div','slot', b.body.length ? '+' : '+ put blocks inside'));
+    w.append(head, body, el('div','rep-foot'));
+    b.el = head; b.badge = badge;
+    return w;
+  }
+  onStep(st){
+    $$('.now', this.progEl).forEach(e => e.classList.remove('now'));
+    if(!st){ setTimeout(()=>{ if(!this.board.running) $$('.badge', this.progEl).forEach(e=>e.classList.remove('show')); }, 1500); return; }
+    st.b.el && st.b.el.classList.add('now');
+    if(st.rep && st.rep.badge){ st.rep.badge.textContent = `${st.i} of ${st.rep.n}`; st.rep.badge.classList.add('show'); }
+  }
+}
+
+/* ---------- slide setup ---------- */
+const MOVES = ['up','down','left','right','collect'];
+const R = (n, body) => ({t:'repeat', n, body:body.map(t=>({t}))});
+const L = arr => arr.map(t => typeof t === 'string' ? {t} : t);
+
+// 4, 5: collect puzzles
+const bP1 = new Board($('#b-p1'), {cols:4, rows:2, start:[0,1], shells:[[3,1]], cell:120});
+new Builder($('#c-p1'), {board:bP1, palette:MOVES, solution:L(['right','right','right','collect'])});
+const bP2 = new Board($('#b-p2'), {cols:3, rows:3, start:[0,2], shells:[[2,2],[2,0]], cell:120});
+new Builder($('#c-p2'), {board:bP2, palette:MOVES, solution:L(['right','right','collect','up','up','collect'])});
+
+// 6: long program
+const bLong = new Board($('#b-long'), {cols:5, rows:1, start:[0,0], shells:[[1,0],[2,0],[3,0],[4,0]], cell:110, speed:420});
+const long = new Builder($('#c-long'), {board:bLong, locked:true, program:L(['right','collect','right','collect','right','collect','right','collect'])});
+let patOn = false;
+$('#pat-btn').onclick = () => {
+  patOn = !patOn; SFX.tap();
+  long.prog.forEach((b,i) => { b.el.classList.toggle('pa', patOn && Math.floor(i/2)%2===0); b.el.classList.toggle('pb', patOn && Math.floor(i/2)%2===1); });
+  $('#pat-btn').textContent = patOn ? 'Move, collect! ×4' : '✨ Show the pattern';
+};
+
+// 7: meet repeat
+const bRep = new Board($('#b-rep'), {cols:5, rows:1, start:[0,0], shells:[[1,0],[2,0],[3,0],[4,0]], cell:110, speed:420});
+new Builder($('#c-rep'), {board:bRep, locked:true, program:[R(4,['right','collect'])]});
+
+// 9, 10: repeat puzzles
+const PAL_R = ['up','down','left','right','collect','repeat'];
+const bP3 = new Board($('#b-p3'), {cols:3, rows:5, start:[1,4], shells:[[1,3],[1,2],[1,1],[1,0]], cell:96, dir:'up', speed:440});
+new Builder($('#c-p3'), {board:bP3, palette:PAL_R, solution:[R(4,['up','collect'])]});
+const bP4 = new Board($('#b-p4'), {cols:4, rows:4, start:[0,3], shells:[[1,2],[2,1],[3,0]], cell:110, speed:440});
+new Builder($('#c-p4'), {board:bP4, palette:PAL_R, solution:[R(3,['right','up','collect'])]});
+
+// fun taps
+$('#hero').onclick = () => { SFX.collect(); const t = $('#hero .tin'); t.animate([{transform:'rotate(0)'},{transform:'rotate(-12deg) scale(1.05)'},{transform:'rotate(12deg)'},{transform:'rotate(0)'}],{duration:600}); };
+$('#end-turtle').onclick = () => { SFX.win(); confetti(); };
+
+/* ---------- navigation ---------- */
+const slides = $$('.slide'); let cur = 0;
+const dots = $('#dots');
+slides.forEach((s,i) => { const d = el('button'); d.title = 'Slide '+(i+1); d.onclick = () => go(i); dots.appendChild(d); });
+function go(i){
+  i = Math.max(0, Math.min(slides.length-1, i));
+  slides[cur].classList.remove('active'); cur = i; slides[cur].classList.add('active');
+  $$('#dots button').forEach((d,j) => d.classList.toggle('on', j===cur));
+  $('#prev').disabled = cur===0; $('#next').disabled = cur===slides.length-1;
+  $('#notes').innerHTML = `<b>Slide ${cur+1} · Teacher notes</b><br>` + (slides[cur].dataset.notes||'');
+  try{ history.replaceState(null,'','#slide-'+(cur+1)); }catch(e){}
+}
+$('#prev').onclick = () => go(cur-1);
+$('#next').onclick = () => go(cur+1);
+$('#t-notes').onclick = () => $('#notes').classList.toggle('show');
+$('#t-sound').onclick = () => { muted = !muted; $('#t-sound').textContent = muted ? '🔇' : '🔊'; };
+$('#t-full').onclick = () => { try{ const d=document; if(d.fullscreenElement) d.exitFullscreen(); else { const p = d.documentElement.requestFullscreen(); p && p.catch(()=>{}); } }catch(e){} };
+document.addEventListener('keydown', e => {
+  if(e.key==='ArrowRight' || e.key==='PageDown') go(cur+1);
+  else if(e.key==='ArrowLeft' || e.key==='PageUp') go(cur-1);
+  else if(e.key==='n' || e.key==='N') $('#notes').classList.toggle('show');
+});
+function fit(){ const s = Math.min(innerWidth/1600, innerHeight/900); $('#stage').style.transform = `scale(${s})`; }
+addEventListener('resize', fit); fit();
+const m = /^#slide-(\d+)$/.exec(location.hash);
+go(m ? (+m[1]-1) : 0);
+</script>
+</body>
+</html>
