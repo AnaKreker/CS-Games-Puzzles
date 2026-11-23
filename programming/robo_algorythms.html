@@ -92,12 +92,13 @@
 <style>
 .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 #g{background:#F5E6CC;border-radius:16px;padding:12px;color:#2B2D42;font-family:Fredoka,"Trebuchet MS",sans-serif}
+#g{max-width:min(1100px, calc((100vh - 420px) * 3));margin:0 auto}  
 #g button{font-family:Fredoka,sans-serif;font-weight:600;font-size:16px;border:3px solid #2B2D42;border-radius:999px;padding:7px 15px;background:#fff;color:#2B2D42;cursor:pointer;box-shadow:0 3px 0 #2B2D42;display:inline-flex;align-items:center;gap:6px}
 #g button:active{transform:translateY(2px);box-shadow:0 1px 0 #2B2D42}
 #g button[aria-pressed="true"].lv{background:#FF9F1C}
 #g .lv{padding:3px 9px 3px 3px;gap:4px;font-size:13px}
 #g .lv .n{width:24px;height:24px;border-radius:50%;border:2px solid #2B2D42;display:flex;align-items:center;justify-content:center;font-size:14px;box-sizing:border-box}
-#g .restart{border-radius:14px;background:#2B2D42;color:#fff;box-shadow:0 3px 0 #000}
+#g .restart{border-radius:14px;background:#7E5FB0;border-color:#4E3A75;color:#fff;box-shadow:0 3px 0 #000}
 #g .snd{width:46px;height:46px;padding:0;border-radius:50%;background:#FFEA56;justify-content:center}
 #g .snd[aria-pressed="false"]{background:#fff;color:#6B5B45}#g .snd .mute{display:none}#g .snd[aria-pressed="false"] .wave{display:none}#g .snd[aria-pressed="false"] .mute{display:inline}
 #g #run{background:#8FE968;font-size:22px;border-radius:18px;padding:0;flex-direction:column;justify-content:center;gap:0;height:122px}
