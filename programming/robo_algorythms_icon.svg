@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <rect width="128" height="128" rx="28" fill="#2B2D42"/>
+  <line x1="64" y1="14" x2="64" y2="27" stroke="#C9D1DE" stroke-width="5"/>
+  <circle cx="64" cy="12" r="6" fill="#FE797B" stroke="#fff" stroke-width="2"/>
+  <rect x="30" y="26" width="68" height="46" rx="14" fill="#DDE3EC" stroke="#fff" stroke-width="3"/>
+  <circle cx="50" cy="46" r="5.5" fill="#2B2D42"/>
+  <circle cx="78" cy="46" r="5.5" fill="#2B2D42"/>
+  <ellipse cx="40" cy="58" rx="5" ry="3.5" fill="#F7A8B8"/>
+  <ellipse cx="88" cy="58" rx="5" ry="3.5" fill="#F7A8B8"/>
+  <path d="M56 57 q8 7 16 0" fill="none" stroke="#2B2D42" stroke-width="3" stroke-linecap="round"/>
+  <rect x="9" y="82" width="28" height="32" rx="6" fill="#fff" stroke="#A587CA" stroke-width="3"/>
+  <rect x="50" y="82" width="28" height="32" rx="6" fill="#fff" stroke="#36CEDC" stroke-width="3"/>
+  <rect x="91" y="82" width="28" height="32" rx="6" fill="#fff" stroke="#FFB750" stroke-width="3"/>
+  <text x="23" y="105" text-anchor="middle" font-family="Arial,sans-serif" font-weight="700" font-size="19" fill="#2B2D42">1</text>
+  <text x="64" y="105" text-anchor="middle" font-family="Arial,sans-serif" font-weight="700" font-size="19" fill="#2B2D42">2</text>
+  <text x="105" y="105" text-anchor="middle" font-family="Arial,sans-serif" font-weight="700" font-size="19" fill="#2B2D42">3</text>
+  <path d="M39 93 l7 5 l-7 5z M80 93 l7 5 l-7 5z" fill="#FFEA56"/>
+</svg>
