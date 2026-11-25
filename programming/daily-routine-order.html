@@ -69,8 +69,8 @@ h1 .titlebox{display:inline-block}
 .pic{width:100%;aspect-ratio:1;border-radius:14px;background:var(--tint);display:grid;place-items:center}
 .pic svg{width:84%;height:84%;overflow:visible}
 .word{font-family:var(--display);font-weight:600;font-size:clamp(15px,1.9vw,19px);line-height:1.1;text-align:center;min-height:1.2em}
-.nowords .word{display:none}
-.ghost{position:fixed;z-index:50;pointer-events:none;margin:0;transform-origin:center;opacity:.95;
+.word{min-height:2.2em;display:flex;align-items:center;justify-content:center}
+   .ghost{position:fixed;z-index:50;pointer-events:none;margin:0;transform-origin:center;opacity:.95;
   box-shadow:0 12px 24px rgba(43,45,66,.18)}
 button:focus-visible{outline:4px solid var(--navy);outline-offset:3px}
 
@@ -206,7 +206,8 @@ button:focus-visible{outline:4px solid var(--navy);outline-offset:3px}
     <div class="row"><span>Helper mode</span><button class="toggle" id="tHelp" aria-pressed="false" aria-label="Helper mode"></button></div>
     <p>With helper mode on, only the right card sticks in each spot. A wrong card gently goes back, so students never see a wrong answer on the board. With it off, students fill every spot and press <b>Check</b>.</p>
     <div class="row"><span>Show words under pictures</span><button class="toggle" id="tWords" aria-pressed="true" aria-label="Show words under pictures"></button></div>
-    <div class="row"><span>Sounds</span><button class="toggle" id="tSound" aria-pressed="true" aria-label="Sounds"></button></div>
+        <div class="row"><span>Read cards aloud</span><button class="toggle" id="tRead" aria-pressed="true" aria-label="Read cards aloud"></button></div>
+     <div class="row"><span>Sounds</span><button class="toggle" id="tSound" aria-pressed="true" aria-label="Sounds"></button></div>
     <div class="row"><span>Stars earned</span><button class="btn" id="resetStars" style="min-height:48px;font-size:17px;padding:0 16px">Reset stars</button></div>
     <p>Students can tap a card to send it to the next empty spot, or drag it to any spot. Tap a card in a spot to send it back.</p>
     <button class="btn next close" id="closeT">Done</button>
@@ -325,7 +326,7 @@ const slotNames=n=>n===3?["First","Next","Last"]:n===4?["First","Next","Then","L
 
 /* ---------- state ---------- */
 const $=id=>document.getElementById(id);
-const S={level:0,placed:[],locked:[],tray:[],helper:false,words:true,sound:true,done:{},misses:0,won:false,busy:false};
+const S={level:0,placed:[],locked:[],tray:[],helper:false,words:true,sound:true,done:{},misses:0,won:false,busy:false,read:true};
 
 /* ---------- sound ---------- */
 let ctx=null;
@@ -346,6 +347,10 @@ const sfx={
 };
 const wait=ms=>new Promise(r=>setTimeout(r,ms));
 function msg(t){$("msg").textContent=t;}
+   function speak(t){
+  if(!S.read||!window.speechSynthesis)return;
+  try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.rate=.85;u.lang="en-US";speechSynthesis.speak(u);}catch(e){}
+}
 
 /* ---------- render ---------- */
 const L=()=>LEVELS[S.level];
@@ -460,6 +465,7 @@ async function win(){
 let drag=null,suppress=false;
 document.addEventListener("pointerdown",e=>{
   const c=e.target.closest(".card");
+   if(c&&e.button===0)speak(label(c.dataset.card));
   if(!c||c.classList.contains("locked")||S.won||S.busy||e.button>0)return;
   drag={el:c,id:c.dataset.card,from:c.dataset.from,x0:e.clientX,y0:e.clientY,moved:false,ghost:null,pid:e.pointerId};
 });
@@ -511,7 +517,10 @@ $("sound").onclick=()=>setSound(!S.sound);
 $("tSound").onclick=()=>setSound(!S.sound);
 $("tHelp").onclick=()=>{S.helper=!S.helper;$("tHelp").setAttribute("aria-pressed",S.helper);loadLevel(S.level);};
 $("tWords").onclick=()=>{S.words=!S.words;$("tWords").setAttribute("aria-pressed",S.words);render();};
-$("resetStars").onclick=()=>{S.done={};renderLevels();};
+$("tRead").onclick=()=>{S.read=!S.read;$("tRead").setAttribute("aria-pressed",S.read);if(!S.read&&window.speechSynthesis)speechSynthesis.cancel();};
+$("msg").onclick=()=>speak($("msg").textContent);
+$("msg").style.cursor="pointer";
+   $("resetStars").onclick=()=>{S.done={};renderLevels();};
 $("teacher").onclick=()=>{$("drawer").hidden=false;$("closeT").focus();};
 $("closeT").onclick=()=>{$("drawer").hidden=true;$("teacher").focus();};
 $("drawer").addEventListener("click",e=>{if(e.target.id==="drawer")$("drawer").hidden=true;});
