@@ -152,8 +152,17 @@ button:focus-visible{outline:4px solid var(--navy);outline-offset:3px}
     </div>
   </header>
 
-  <p class="say" aria-live="polite"><span class="bubble" id="msg">Put the pictures in order.</span></p>
-
+  <div class="sayrow">
+    <p class="say" aria-live="polite"><span class="bubble" id="msg">Put the pictures in order.</span></p>
+    <div class="actions" id="actions">
+      <button class="btn" id="reset">
+        <svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 2.5-5.8M4 4v5h5" stroke="#2B2D42" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>Start over
+      </button>
+      <button class="btn go" id="checkBtn">
+        <svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" stroke="#fff" stroke-width="3.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>Check
+      </button>
+    </div>
+  </div>
   <div class="stage" id="stage">
     <div class="slots" id="slots"></div>
   </div>
