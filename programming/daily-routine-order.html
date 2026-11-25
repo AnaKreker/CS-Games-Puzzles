@@ -129,6 +129,31 @@ button:focus-visible{outline:4px solid var(--navy);outline-offset:3px}
 .home:active{transform:translateY(3px);box-shadow:0 1px 0 #2B2D42}
 .home:focus-visible{outline:3px solid #FF9F1C;outline-offset:3px}
 
+/* Buttons sit in the purple message row */
+.sayrow{display:flex;align-items:center;justify-content:space-between;gap:10px 16px;flex-wrap:wrap}
+.sayrow .actions{justify-content:flex-end;flex-wrap:nowrap}
+
+/* Fit Dell Chromebook screens (1366x768 and similar) */
+@media (max-height:860px){
+  body{padding-block:8px 10px;font-size:16px}
+  .wrap{gap:10px}
+  h1{font-size:clamp(28px,4vw,40px)}
+  .lv{width:38px;height:38px;font-size:16px;border-radius:12px}
+  .icon{width:44px;height:44px}
+  .icon svg{width:24px;height:24px}
+  .say{font-size:20px}
+  .say .bubble{padding:8px 16px}
+  .btn{min-height:50px;font-size:19px;padding:0 18px}
+  .btn svg{width:24px;height:24px}
+  .btn.go{min-width:150px;font-size:21px}
+  .stage{padding:10px;border-width:4px}
+  .slot{min-height:0;padding:46px 6px 6px}
+  .badge b{width:32px;height:32px;font-size:18px}
+  .tray{min-height:0;padding:10px;gap:10px}
+  .card{width:clamp(84px,min(20vw,19vh),156px)}
+  .slot .card{max-width:min(156px,19vh)}
+}
+
 </style>
    
 
